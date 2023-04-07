@@ -106,8 +106,9 @@ fun MessageComposer(
     val messageComposerStateHolder = _rememberMessageComposerStateHolder()
 
     MessageComposerTest(
-        messageComposerStateHolder,
-        messagesList
+        messageComposerStateHolder = messageComposerStateHolder,
+        messagesList = messagesList,
+        onTransistionToActive = messageComposerStateHolder::toActive
     )
 }
 
@@ -115,13 +116,14 @@ fun MessageComposer(
 fun MessageComposerTest(
     messageComposerStateHolder: _MessageComposerStateHolder,
     messagesList: @Composable () -> Unit,
+    onTransistionToActive: (Boolean) -> Unit,
 ) {
     val movableMessageList = remember { movableContentOf(messagesList) }
 
     Surface(color = colorsScheme().messageComposerBackgroundColor) {
-        when (val active = messageComposerStateHolder.mwessageComposerState) {
-            is _MessageComposerState._Active -> _ActiveMessageComposer(movableMessageList, active)
-            is _MessageComposerState._InActive -> _InActiveMessageComposer(messagesList)
+        when (val messageComposerState = messageComposerStateHolder.mwessageComposerState) {
+            is _MessageComposerState._Active -> _ActiveMessageComposer(movableMessageList, messageComposerState)
+            is _MessageComposerState._InActive -> _InActiveMessageComposer(messagesList, onTransistionToActive)
         }
 
 
@@ -134,26 +136,32 @@ fun MessageComposerTest(
 
 @Composable
 fun _InActiveMessageComposer(messagesList: @Composable () -> Unit, onTransistionToActive: (Boolean) -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
+    Column(
+        Modifier
             .fillMaxWidth()
-    ) {
-        Box(modifier = Modifier.padding(start = dimensions().spacing8x)) {
-            AdditionalOptionButton(
-                isSelected = false,
-                isEnabled = true,
-                onClick = { onTransistionToActive(true) }
-            )
-        }
-
-        Text(
-            "Test",
+            .fillMaxHeight()) {
+        messagesList()
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentHeight()
-                .clickable { onTransistionToActive(false) }
-        )
+        ) {
+            Box(modifier = Modifier.padding(start = dimensions().spacing8x)) {
+                AdditionalOptionButton(
+                    isSelected = false,
+                    isEnabled = true,
+                    onClick = { onTransistionToActive(true) }
+                )
+            }
+
+            Text(
+                "Test",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .clickable { onTransistionToActive(false) }
+            )
+        }
     }
 }
 
