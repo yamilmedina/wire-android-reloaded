@@ -59,7 +59,6 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
@@ -214,8 +213,6 @@ fun _ActiveMessageComposer(
             }
         }
 
-        val localFocusManager = LocalFocusManager.current
-
         Column(
             Modifier
                 .fillMaxWidth()
@@ -248,14 +245,13 @@ fun _ActiveMessageComposer(
                 ActiveMessageComposingInput()
                 AdditionalOptionsMenu(onAdditionalOptionButtonClicked = {
                     activeMessageComposerState.toggleAttachmentOptions()
-                    localFocusManager.clearFocus()
                 })
             }
 
-            val attachmentOptionsVisible = activeMessageComposerState.test == _GeneralOptionItems.AttachFile
+            val additionalOptionSubMenuVisible = activeMessageComposerState.test == _GeneralOptionItems.AttachFile
                     && !KeyboardHelper.isKeyboardVisible()
 
-            if (attachmentOptionsVisible) {
+            if (additionalOptionSubMenuVisible) {
                 AdditionalOptionSubMenu(
                     modifier = Modifier
                         .height(keyboardHeight.height)
@@ -273,7 +269,6 @@ fun _ActiveMessageComposer(
                         .fillMaxWidth()
                 )
             }
-
         }
     }
 }
