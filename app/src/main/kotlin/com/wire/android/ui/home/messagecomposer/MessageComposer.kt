@@ -48,7 +48,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -202,25 +201,23 @@ fun _ActiveMessageComposer(
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val currentScreenHeight: Dp = with(LocalDensity.current) { constraints.maxHeight.toDp() }
 
+        // when MessageComposer is composed for the first time we do not know the height until users opens the keyboard
+        var keyboardHeight: KeyboardHeight by remember { mutableStateOf(KeyboardHeight.NotKnown) }
+
+        if (KeyboardHelper.isKeyboardVisible()) {
+            val calculatedKeyboardHeight = KeyboardHelper.getCalculatedKeyboardHeight()
+            val notKnownAndCalculated = keyboardHeight is KeyboardHeight.NotKnown && calculatedKeyboardHeight > 0.dp
+            val knownAndDifferent = keyboardHeight is KeyboardHeight.Known && keyboardHeight.height != calculatedKeyboardHeight
+            if (notKnownAndCalculated || knownAndDifferent) {
+                keyboardHeight = KeyboardHeight.Known(calculatedKeyboardHeight)
+            }
+        }
+
         Column(
             Modifier
                 .fillMaxWidth()
                 .height(currentScreenHeight)
         ) {
-            // when MessageComposer is composed for the first time we do not know the height until users opens the keyboard
-            var keyboardHeight: KeyboardHeight by remember { mutableStateOf(KeyboardHeight.NotKnown) }
-
-            if (KeyboardHelper.isKeyboardVisible()) {
-                val calculatedKeyboardHeight = KeyboardHelper.getCalculatedKeyboardHeight()
-                val notKnownAndCalculated = keyboardHeight is KeyboardHeight.NotKnown && calculatedKeyboardHeight > 0.dp
-                val knownAndDifferent = keyboardHeight is KeyboardHeight.Known && keyboardHeight.height != calculatedKeyboardHeight
-                if (notKnownAndCalculated || knownAndDifferent) {
-                    keyboardHeight = KeyboardHeight.Known(calculatedKeyboardHeight)
-                }
-            }
-            val attachmentOptionsVisible = activeMessageComposerState.test == _GeneralOptionItems.AttachFile
-                    && !KeyboardHelper.isKeyboardVisible()
-
             Column(
                 Modifier
                     .weight(1f)
@@ -232,8 +229,6 @@ fun _ActiveMessageComposer(
                             detectTapGestures(
                                 onPress = {
                                     onTransistionToInActive()
-//                                                messageComposerState.focusManager.clearFocus()
-//                                                messageComposerState.toInactive()
                                 },
                                 onDoubleTap = { /* Called on Double Tap */ },
                                 onLongPress = { /* Called on Long Press */ },
@@ -247,21 +242,15 @@ fun _ActiveMessageComposer(
                     messageContent()
                 }
 
-                ComposingInput(MessageCompositionInputSize.COLLAPSED, {}, FocusRequester())
-                AttachmentAndAdditionalOptionsMenuItems(
-                    isMentionActive = false,
-                    isFileSharingEnabled = false,
-                    startMention = {},
-                    modifier = Modifier
-                )
+                ActiveMessageComposingInput()
+                AdditionalOptionsMenu(onAdditionalOptionButtonClicked = { activeMessageComposerState.toggleAttachmentOptions() })
             }
 
-            // Box wrapping for additional options content
-            // we want to offset the AttachmentOptionsComponent equal to where
-            // the device keyboard is displayed, so that when the keyboard is closed,
-            // we get the effect of overlapping it
+            val attachmentOptionsVisible = activeMessageComposerState.test == _GeneralOptionItems.AttachFile
+                    && !KeyboardHelper.isKeyboardVisible()
+
             if (attachmentOptionsVisible) {
-                _AttachmentOptionsComponent(
+                AdditionalOptionSubMenu(
                     modifier = Modifier
                         .height(keyboardHeight.height)
                         .fillMaxWidth()
@@ -271,15 +260,39 @@ fun _ActiveMessageComposer(
             // This covers the situation when the user switches from attachment options to the input keyboard - there is a moment when
             // both attachmentOptionsDisplayed and isKeyboardVisible are false, but right after that keyboard shows, so if we know that
             // the input already has a focus, we can show an empty Box which has a height of the keyboard to prevent flickering.
-            else if (activeMessageComposerState.test != _GeneralOptionItems.AttachFile && !KeyboardHelper.isKeyboardVisible()) {
+            else if (activeMessageComposerState.test == _GeneralOptionItems.AttachFile && !KeyboardHelper.isKeyboardVisible()) {
                 Box(
                     modifier = Modifier
                         .height(keyboardHeight.height)
                         .fillMaxWidth()
                 )
             }
+
         }
     }
+}
+
+@Composable
+fun ActiveMessageComposingInput() {
+    ComposingInput(MessageCompositionInputSize.COLLAPSED, {}, FocusRequester())
+}
+
+@Composable
+fun AdditionalOptionSubMenu(modifier: Modifier) {
+    _AttachmentOptionsComponent(
+        modifier = modifier
+    )
+}
+
+@Composable
+fun AdditionalOptionsMenu(onAdditionalOptionButtonClicked: () -> Unit) {
+    AttachmentAndAdditionalOptionsMenuItems(
+        isMentionActive = false,
+        isFileSharingEnabled = true,
+        startMention = {},
+        onAdditionalOptionButtonClicked = onAdditionalOptionButtonClicked,
+        modifier = Modifier
+    )
 }
 
 @Composable
@@ -287,6 +300,7 @@ fun AttachmentAndAdditionalOptionsMenuItems(
     isMentionActive: Boolean,
     isFileSharingEnabled: Boolean,
     startMention: () -> Unit,
+    onAdditionalOptionButtonClicked: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(modifier.wrapContentSize()) {
@@ -298,7 +312,7 @@ fun AttachmentAndAdditionalOptionsMenuItems(
                 false,
                 isFileSharingEnabled,
                 startMention,
-                {},
+                onAdditionalOptionButtonClicked = onAdditionalOptionButtonClicked,
                 {}
             )
         }
