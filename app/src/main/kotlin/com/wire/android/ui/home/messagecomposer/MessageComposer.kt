@@ -108,7 +108,8 @@ fun MessageComposer(
     MessageComposerTest(
         messageComposerStateHolder = messageComposerStateHolder,
         messagesList = messagesList,
-        onTransistionToActive = messageComposerStateHolder::toActive
+        onTransistionToActive = messageComposerStateHolder::toActive,
+        onTransistionToInActive = messageComposerStateHolder::toInActive
     )
 }
 
@@ -117,13 +118,20 @@ fun MessageComposerTest(
     messageComposerStateHolder: _MessageComposerStateHolder,
     messagesList: @Composable () -> Unit,
     onTransistionToActive: (Boolean) -> Unit,
+    onTransistionToInActive: () -> Unit,
 ) {
-    val movableMessageList = remember { movableContentOf(messagesList) }
-
     Surface(color = colorsScheme().messageComposerBackgroundColor) {
-        when (val messageComposerState = messageComposerStateHolder.mwessageComposerState) {
-            is _MessageComposerState._Active -> _ActiveMessageComposer(movableMessageList, messageComposerState)
-            is _MessageComposerState._InActive -> _InActiveMessageComposer(messagesList, onTransistionToActive)
+        when (val messageComposerState = messageComposerStateHolder._messageComposerState) {
+            is _MessageComposerState._Active -> _ActiveMessageComposer(
+                messageContent = messagesList,
+                activeMessageComposerState = messageComposerState,
+                onTransistionToInActive = onTransistionToInActive
+            )
+
+            is _MessageComposerState._InActive -> _InActiveMessageComposer(
+                messagesList = messagesList,
+                onTransistionToActive = onTransistionToActive
+            )
         }
 
 
@@ -139,12 +147,32 @@ fun _InActiveMessageComposer(messagesList: @Composable () -> Unit, onTransistion
     Column(
         Modifier
             .fillMaxWidth()
-            .fillMaxHeight()) {
-        messagesList()
+            .fillMaxHeight()
+    ) {
+        Box(
+            Modifier
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onPress = {
+//                                                messageComposerState.focusManager.clearFocus()
+//                                                messageComposerState.toInactive()
+                        },
+                        onDoubleTap = { /* Called on Double Tap */ },
+                        onLongPress = { /* Called on Long Press */ },
+                        onTap = { /* Called on Tap */ }
+                    )
+                }
+                .background(color = colorsScheme().backgroundVariant)
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            messagesList()
+        }
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
+                .wrapContentHeight()
         ) {
             Box(modifier = Modifier.padding(start = dimensions().spacing8x)) {
                 AdditionalOptionButton(
@@ -166,7 +194,11 @@ fun _InActiveMessageComposer(messagesList: @Composable () -> Unit, onTransistion
 }
 
 @Composable
-fun _ActiveMessageComposer(messageContent: @Composable () -> Unit, activeMessageComposerState: _MessageComposerState._Active) {
+fun _ActiveMessageComposer(
+    messageContent: @Composable () -> Unit,
+    activeMessageComposerState: _MessageComposerState._Active,
+    onTransistionToInActive: () -> Unit
+) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val currentScreenHeight: Dp = with(LocalDensity.current) { constraints.maxHeight.toDp() }
 
@@ -199,6 +231,7 @@ fun _ActiveMessageComposer(messageContent: @Composable () -> Unit, activeMessage
                         .pointerInput(Unit) {
                             detectTapGestures(
                                 onPress = {
+                                    onTransistionToInActive()
 //                                                messageComposerState.focusManager.clearFocus()
 //                                                messageComposerState.toInactive()
                                 },

@@ -43,12 +43,12 @@ class _MessageComposerStateHolder(
     val inputFocusRequester: FocusRequester,
 ) {
 
-    var mwessageComposerState: _MessageComposerState by mutableStateOf(_MessageComposerState._Active(
+/*    var mwessageComposerState: _MessageComposerState by mutableStateOf(_MessageComposerState._Active(
         messageComposition = _MessageComposition._Empty,
         _generalOptionItem = _GeneralOptionItems.AttachFile ,
         _messageCompositionInputType = _MessageCompositionInputType.Composing,
         _messageCompositionInputSize = MessageCompositionInputSize.COLLAPSED
-    ))
+    ))*/
 
     var _messageComposerState: _MessageComposerState by mutableStateOf(
         _MessageComposerState._InActive(_MessageComposition._Empty)
