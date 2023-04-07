@@ -88,7 +88,7 @@ fun MessageComposeActionsBox(
 }
 
 @Composable
-private fun MessageComposeActions(
+fun MessageComposeActions(
     attachmentOptionsDisplayed: Boolean,
     isMentionsSelected: Boolean,
     isEditMessage: Boolean,

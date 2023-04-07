@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.Divider
@@ -52,6 +53,7 @@ import com.wire.android.ui.home.conversations.ConversationSnackbarMessages.Error
 import com.wire.android.ui.home.conversations.model.AssetBundle
 import com.wire.android.ui.home.messagecomposer.AttachmentInnerState
 import com.wire.android.ui.home.messagecomposer.AttachmentState
+import com.wire.android.ui.home.messagecomposer.KeyboardHeight
 import com.wire.android.ui.theme.wireColorScheme
 import com.wire.android.util.debug.LocalFeatureVisibilityFlags
 import com.wire.android.util.permission.UseCameraRequestFlow
@@ -92,6 +94,51 @@ fun AttachmentOptions(
         )
     }
 }
+
+@Composable
+fun _AttachmentOptionsComponent(
+    modifier : Modifier = Modifier
+) {
+    Box(Modifier.height(KeyboardHeight.DEFAULT_KEYBOARD_TOP_SCREEN_OFFSET)) {
+        val attachmentOptions = buildAttachmentOptionItems(
+            true,
+            null,
+            null
+        ) { pickedUri ->
+//        scope.launch {
+//            attachmentInnerState.pickAttachment(pickedUri, tempCachePath)
+//        }
+        }
+
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val fullWidth: Dp = with(LocalDensity.current) { constraints.maxWidth.toDp() }
+            val minColumnWidth: Dp = dimensions().spacing80x
+            val minPadding: Dp = dimensions().spacing8x
+            val visibleAttachmentOptions = attachmentOptions.filter { it.shouldShow }
+            val params by remember(fullWidth, visibleAttachmentOptions.size) {
+                derivedStateOf {
+                    calculateGridParams(minPadding, minColumnWidth, fullWidth, visibleAttachmentOptions.size)
+                }
+            }
+            val (columns, contentPadding) = params
+
+            LazyVerticalGrid(
+                columns = columns,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = contentPadding,
+                verticalArrangement = Arrangement.SpaceEvenly,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                visibleAttachmentOptions.forEach { option ->
+                    if (option.shouldShow) {
+                        item { AttachmentButton(stringResource(option.text), option.icon) { option.onClick() } }
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 @Composable
 private fun AttachmentOptionsComponent(
