@@ -77,7 +77,6 @@ enum class MessageCompositionInputSize {
     EXPANDED; // fullscreen	    EXPANDED; // fullscreen
 }
 
-
 sealed class _MessageComposerState {
 
     abstract val messageComposition: _MessageComposition
