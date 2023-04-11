@@ -437,7 +437,6 @@ private fun MessageComposer(
                 val attachmentOptionsVisible =
                     messageComposerState.messageComposeInputState.attachmentOptionsDisplayed && !isKeyboardVisible
 
-
                 LaunchedEffect(isKeyboardVisible) {
                     if (!isKeyboardVisible && !messageComposerState.messageComposeInputState.attachmentOptionsDisplayed) {
                         if (!messageComposerState.messageComposeInputState.isEditMessage) {
