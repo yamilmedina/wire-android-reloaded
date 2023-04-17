@@ -240,7 +240,7 @@ fun _ActiveMessageComposer(
                 }
 
                 ActiveMessageComposingInput(
-                    messageText = activeMessageComposerState._messageCompositon,
+                    messageText = activeMessageComposerState.messageComposition,
                     onMessageTextChanged = activeMessageComposerState::messageTextChanged
                 )
                 AdditionalOptionsMenu(
@@ -282,7 +282,7 @@ fun _ActiveMessageComposer(
 @Composable
 fun ActiveMessageComposingInput(
     messageText: _MessageComposition,
-    onMessageTextChanged: (String) -> Unit
+    onMessageTextChanged: (TextFieldValue) -> Unit
 ) {
     ComposingInput(
         messageText = messageText.text,
@@ -357,11 +357,11 @@ fun AttachmentAndAdditionalOptionsMenuItems(
 
 @Composable
 fun ComposingInput(
-    messageText: String,
+    messageText: TextFieldValue,
     inputSize: MessageCompositionInputSize,
     onFocused: () -> Unit,
     focusRequester: FocusRequester,
-    onMessageTextChanged: (String) -> Unit
+    onMessageTextChanged: (TextFieldValue) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -370,8 +370,8 @@ fun ComposingInput(
         verticalAlignment = Alignment.Bottom
     ) {
         _MessageComposerInput(
-            messageText = TextFieldValue(messageText),
-            onMessageTextChanged = { onMessageTextChanged(it.text) },
+            messageText = messageText,
+            onMessageTextChanged = onMessageTextChanged,
             singleLine = false,
             onFocusChanged = { isFocused -> if (isFocused) onFocused() },
             focusRequester = focusRequester,

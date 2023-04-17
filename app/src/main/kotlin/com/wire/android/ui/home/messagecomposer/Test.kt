@@ -55,12 +55,9 @@ class _MessageComposerStateHolder(
     )
         private set
 
-
-    var _messageComposition: _MessageComposition by mutableStateOf(_MessageComposition(""))
-
     fun toActive(showAttachmentOption: Boolean) {
         _messageComposerState = _MessageComposerState._Active(
-            _messageComposition,
+            _messageComposition = _MessageComposition(TextFieldValue("")),
             _generalOptionItem = if (showAttachmentOption) _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile else _AttachmentAndAdditionalOptionsSubMenuItems.None,
             _messageCompositionInputType = _MessageCompositionInputType.Composing,
             _messageCompositionInputSize = MessageCompositionInputSize.COLLAPSED,
@@ -81,27 +78,30 @@ enum class MessageCompositionInputSize {
     EXPANDED; // fullscreen	    EXPANDED; // fullscreen
 }
 
-data class _MessageComposition(val text: String)
+data class _MessageComposition(val text: TextFieldValue)
 
 sealed class _MessageComposerState() {
 
     data class _Active(
-         val _messageCompositon: _MessageComposition,
+        private val _messageComposition: _MessageComposition,
         private val _generalOptionItem: _AttachmentAndAdditionalOptionsSubMenuItems,
         private val _messageCompositionInputType: _MessageCompositionInputType.Composing,
         private val _messageCompositionInputSize: MessageCompositionInputSize,
         private val _additionalOptionsState: AdditionalOptionState,
     ) : _MessageComposerState() {
 
-        fun messageTextChanged(it: String) {
-            _messageCompositon.copy(it)
-        }
+
+        var messageComposition: _MessageComposition by mutableStateOf(_messageComposition)
 
         var inputType: _MessageCompositionInputType by mutableStateOf(_messageCompositionInputType)
 
         var inputSize: MessageCompositionInputSize by mutableStateOf(_messageCompositionInputSize)
 
         val additionalOptionsState by mutableStateOf(_additionalOptionsState)
+
+        fun messageTextChanged(it: TextFieldValue) {
+            messageComposition = messageComposition.copy(it)
+        }
     }
 
     object _InActive : _MessageComposerState()
