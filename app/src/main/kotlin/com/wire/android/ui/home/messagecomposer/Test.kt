@@ -27,6 +27,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.TextFieldValue
 
+
 @Composable
 fun _rememberMessageComposerStateHolder(): _MessageComposerStateHolder {
     val focusManager = LocalFocusManager.current
@@ -50,13 +51,16 @@ class _MessageComposerStateHolder(
         ))*/
 
     var _messageComposerState: _MessageComposerState by mutableStateOf(
-        _MessageComposerState._InActive(_MessageComposition._Empty)
+        _MessageComposerState._InActive
     )
         private set
 
+
+    var _messageComposition: _MessageComposition by mutableStateOf(_MessageComposition(""))
+
     fun toActive(showAttachmentOption: Boolean) {
         _messageComposerState = _MessageComposerState._Active(
-            messageComposition = _MessageComposition._Empty,
+            _messageComposition,
             _generalOptionItem = if (showAttachmentOption) _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile else _AttachmentAndAdditionalOptionsSubMenuItems.None,
             _messageCompositionInputType = _MessageCompositionInputType.Composing,
             _messageCompositionInputSize = MessageCompositionInputSize.COLLAPSED,
@@ -67,7 +71,7 @@ class _MessageComposerStateHolder(
     }
 
     fun toInActive() {
-        _messageComposerState = _MessageComposerState._InActive.DEFAULT
+        _messageComposerState = _MessageComposerState._InActive
     }
 
 }
@@ -77,17 +81,21 @@ enum class MessageCompositionInputSize {
     EXPANDED; // fullscreen	    EXPANDED; // fullscreen
 }
 
-sealed class _MessageComposerState {
+data class _MessageComposition(val text: String)
 
-    abstract val messageComposition: _MessageComposition
+sealed class _MessageComposerState() {
 
     data class _Active(
-        override val messageComposition: _MessageComposition,
+         val _messageCompositon: _MessageComposition,
         private val _generalOptionItem: _AttachmentAndAdditionalOptionsSubMenuItems,
         private val _messageCompositionInputType: _MessageCompositionInputType.Composing,
         private val _messageCompositionInputSize: MessageCompositionInputSize,
         private val _additionalOptionsState: AdditionalOptionState,
     ) : _MessageComposerState() {
+
+        fun messageTextChanged(it: String) {
+            _messageCompositon.copy(it)
+        }
 
         var inputType: _MessageCompositionInputType by mutableStateOf(_messageCompositionInputType)
 
@@ -96,11 +104,7 @@ sealed class _MessageComposerState {
         val additionalOptionsState by mutableStateOf(_additionalOptionsState)
     }
 
-    data class _InActive(override val messageComposition: _MessageComposition) : _MessageComposerState() {
-        companion object {
-            val DEFAULT = _InActive(_MessageComposition._Empty)
-        }
-    }
+    object _InActive : _MessageComposerState()
 
 }
 
@@ -126,7 +130,6 @@ sealed class AdditionalOptionState {
                 _AttachmentAndAdditionalOptionsSubMenuItems.Gif
             }
         }
-
 
     }
 
@@ -167,13 +170,3 @@ enum class _AttachmentAndAdditionalOptionsSubMenuItems {
     Gif;
 }
 
-sealed class _MessageComposition() {
-    companion object {
-        val DEFAULT = _Empty
-    }
-
-    data class _TextComposition(val messageText: TextFieldValue) : _MessageComposition()
-    object _AssetComposition : _MessageComposition()
-    object _Empty : _MessageComposition()
-
-}

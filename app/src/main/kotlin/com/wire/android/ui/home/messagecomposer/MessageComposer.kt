@@ -38,7 +38,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -124,15 +123,15 @@ fun MessageComposerTest(
 ) {
     Surface(color = colorsScheme().messageComposerBackgroundColor) {
         when (val messageComposerState = messageComposerStateHolder._messageComposerState) {
+            is _MessageComposerState._InActive -> _InActiveMessageComposer(
+                messagesList = messagesList,
+                onTransistionToActive = onTransistionToActive
+            )
+
             is _MessageComposerState._Active -> _ActiveMessageComposer(
                 messageContent = messagesList,
                 activeMessageComposerState = messageComposerState,
                 onTransistionToInActive = onTransistionToInActive
-            )
-
-            is _MessageComposerState._InActive -> _InActiveMessageComposer(
-                messagesList = messagesList,
-                onTransistionToActive = onTransistionToActive
             )
         }
 //    BackHandler(messageComposerState.messageComposeInputState.attachmentOptionsDisplayed) {
@@ -153,10 +152,7 @@ fun _InActiveMessageComposer(messagesList: @Composable () -> Unit, onTransistion
             Modifier
                 .pointerInput(Unit) {
                     detectTapGestures(
-                        onPress = {
-//                                                messageComposerState.focusManager.clearFocus()
-//                                                messageComposerState.toInactive()
-                        },
+                        onPress = {},
                         onDoubleTap = { /* Called on Double Tap */ },
                         onLongPress = { /* Called on Long Press */ },
                         onTap = { /* Called on Tap */ }
@@ -243,7 +239,10 @@ fun _ActiveMessageComposer(
                     messageContent()
                 }
 
-                ActiveMessageComposingInput()
+                ActiveMessageComposingInput(
+                    messageText = activeMessageComposerState._messageCompositon,
+                    onMessageTextChanged = activeMessageComposerState::messageTextChanged
+                )
                 AdditionalOptionsMenu(
                     additionalOptionsState = activeMessageComposerState.additionalOptionsState
                 )
@@ -253,12 +252,13 @@ fun _ActiveMessageComposer(
                 activeMessageComposerState.additionalOptionsState.dupaJasia != _AttachmentAndAdditionalOptionsSubMenuItems.None
                         && !KeyboardHelper.isKeyboardVisible()
 
-            val isTransitionToKeyboardOngoing =
-                activeMessageComposerState.additionalOptionsState.dupaJasia == _AttachmentAndAdditionalOptionsSubMenuItems.None && !KeyboardHelper.isKeyboardVisible()
+            val isTransitionToOpenKeyboardOngoing =
+                activeMessageComposerState.additionalOptionsState.dupaJasia == _AttachmentAndAdditionalOptionsSubMenuItems.None
+                        && !KeyboardHelper.isKeyboardVisible()
 
             if (additionalOptionSubMenuVisible) {
                 AdditionalOptionSubMenu(
-                    activeMessageComposerState.additionalOptionsState.dupaJasia,
+                    activeMessageComposerState.additionalOptionsState,
                     modifier = Modifier
                         .height(keyboardHeight.height)
                         .fillMaxWidth()
@@ -268,7 +268,7 @@ fun _ActiveMessageComposer(
             // This covers the situation when the user switches from attachment options to the input keyboard - there is a moment when
             // both attachmentOptionsDisplayed and isKeyboardVisible are false, but right after that keyboard shows, so if we know that
             // the input already has a focus, we can show an empty Box which has a height of the keyboard to prevent flickering.
-            else if (isTransitionToKeyboardOngoing) {
+            else if (isTransitionToOpenKeyboardOngoing) {
                 Box(
                     modifier = Modifier
                         .height(keyboardHeight.height)
@@ -280,10 +280,18 @@ fun _ActiveMessageComposer(
 }
 
 @Composable
-fun ActiveMessageComposingInput() {
-    ComposingInput(MessageCompositionInputSize.COLLAPSED, {}, FocusRequester())
+fun ActiveMessageComposingInput(
+    messageText: _MessageComposition,
+    onMessageTextChanged: (String) -> Unit
+) {
+    ComposingInput(
+        messageText = messageText.text,
+        inputSize = MessageCompositionInputSize.COLLAPSED,
+        onFocused = {},
+        focusRequester = FocusRequester(),
+        onMessageTextChanged = onMessageTextChanged
+    )
 }
-
 
 @Composable
 fun AdditionalOptionsMenu(
@@ -306,24 +314,16 @@ fun AdditionalOptionsMenu(
 }
 
 @Composable
-fun AdditionalOptionSubMenu(additionalOptionsState: _AttachmentAndAdditionalOptionsSubMenuItems, modifier: Modifier) {
-    when (additionalOptionsState) {
+fun AdditionalOptionSubMenu(additionalOptionsState: AdditionalOptionState, modifier: Modifier) {
+    when (additionalOptionsState.dupaJasia) {
         _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile -> {
             _AttachmentOptionsComponent(
                 modifier = modifier
             )
         }
+
         _AttachmentAndAdditionalOptionsSubMenuItems.Emoji -> {}
-        _AttachmentAndAdditionalOptionsSubMenuItems.Gif -> {
-            Box(
-                Modifier
-                    .width(256.dp)
-                    .height(256.dp)
-                    .background(Color.Red)) {
-
-            }
-        }
-
+        _AttachmentAndAdditionalOptionsSubMenuItems.Gif -> {}
         _AttachmentAndAdditionalOptionsSubMenuItems.None -> {}
     }
 }
@@ -356,7 +356,13 @@ fun AttachmentAndAdditionalOptionsMenuItems(
 }
 
 @Composable
-fun ComposingInput(inputSize: MessageCompositionInputSize, onFocused: () -> Unit, focusRequester: FocusRequester) {
+fun ComposingInput(
+    messageText: String,
+    inputSize: MessageCompositionInputSize,
+    onFocused: () -> Unit,
+    focusRequester: FocusRequester,
+    onMessageTextChanged: (String) -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -364,8 +370,8 @@ fun ComposingInput(inputSize: MessageCompositionInputSize, onFocused: () -> Unit
         verticalAlignment = Alignment.Bottom
     ) {
         _MessageComposerInput(
-            messageText = TextFieldValue("Test"),
-            onMessageTextChanged = { },
+            messageText = TextFieldValue(messageText),
+            onMessageTextChanged = { onMessageTextChanged(it.text) },
             singleLine = false,
             onFocusChanged = { isFocused -> if (isFocused) onFocused() },
             focusRequester = focusRequester,
