@@ -84,6 +84,8 @@ import com.wire.kalium.logic.feature.conversation.InteractionAvailability
 import com.wire.kalium.logic.feature.conversation.SecurityClassificationType
 import okio.Path
 
+typealias transistionToActive = (Boolean) -> Unit
+
 @Composable
 fun MessageComposer(
     messageComposerState: MessageComposerInnerState,
@@ -132,8 +134,6 @@ fun MessageComposerTest(
                 onTransistionToActive = onTransistionToActive
             )
         }
-
-
 //    BackHandler(messageComposerState.messageComposeInputState.attachmentOptionsDisplayed) {
 //        messageComposerState.hideAttachmentOptions()
 //        messageComposerState.toInactive()
@@ -243,16 +243,20 @@ fun _ActiveMessageComposer(
                 }
 
                 ActiveMessageComposingInput()
-                AdditionalOptionsMenu(onAdditionalOptionButtonClicked = {
-                    activeMessageComposerState.toggleAttachmentOptions()
-                })
+                AdditionalOptionsMenu(
+                    additionalOptionsState = activeMessageComposerState.additionalOptionsState
+                )
             }
 
-            val additionalOptionSubMenuVisible = activeMessageComposerState.test == _GeneralOptionItems.AttachFile
+            val additionalOptionSubMenuVisible = activeMessageComposerState.additionalOptionsState.dupaJasia == _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile
                     && !KeyboardHelper.isKeyboardVisible()
+
+            val isTransitionToKeyboardOngoing =
+                activeMessageComposerState.additionalOptionsState.dupaJasia == _AttachmentAndAdditionalOptionsSubMenuItems.None && !KeyboardHelper.isKeyboardVisible()
 
             if (additionalOptionSubMenuVisible) {
                 AdditionalOptionSubMenu(
+                    activeMessageComposerState.additionalOptionsState.dupaJasia,
                     modifier = Modifier
                         .height(keyboardHeight.height)
                         .fillMaxWidth()
@@ -262,7 +266,7 @@ fun _ActiveMessageComposer(
             // This covers the situation when the user switches from attachment options to the input keyboard - there is a moment when
             // both attachmentOptionsDisplayed and isKeyboardVisible are false, but right after that keyboard shows, so if we know that
             // the input already has a focus, we can show an empty Box which has a height of the keyboard to prevent flickering.
-            else if (activeMessageComposerState.test == _GeneralOptionItems.AttachFile && !KeyboardHelper.isKeyboardVisible()) {
+            else if (isTransitionToKeyboardOngoing) {
                 Box(
                     modifier = Modifier
                         .height(keyboardHeight.height)
@@ -279,21 +283,36 @@ fun ActiveMessageComposingInput() {
 }
 
 @Composable
-fun AdditionalOptionSubMenu(modifier: Modifier) {
-    _AttachmentOptionsComponent(
-        modifier = modifier
-    )
+fun AdditionalOptionSubMenu(additionalOptionsState: _AttachmentAndAdditionalOptionsSubMenuItems, modifier: Modifier) {
+    when (additionalOptionsState) {
+        _AttachmentAndAdditionalOptionsSubMenuItems.None -> {}
+        _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile -> {
+            _AttachmentOptionsComponent(
+                modifier = modifier
+            )
+        }
+        _AttachmentAndAdditionalOptionsSubMenuItems.Emoji -> {}
+        _AttachmentAndAdditionalOptionsSubMenuItems.Gif -> {}
+    }
 }
 
 @Composable
-fun AdditionalOptionsMenu(onAdditionalOptionButtonClicked: () -> Unit) {
-    AttachmentAndAdditionalOptionsMenuItems(
-        isMentionActive = false,
-        isFileSharingEnabled = true,
-        startMention = {},
-        onAdditionalOptionButtonClicked = onAdditionalOptionButtonClicked,
-        modifier = Modifier
-    )
+fun AdditionalOptionsMenu(
+    additionalOptionsState: AdditionalOptionState
+) {
+    when (additionalOptionsState) {
+        is AdditionalOptionState.AttachmentAndAdditionalOptions -> {
+            AttachmentAndAdditionalOptionsMenuItems(
+                isMentionActive = false,
+                isFileSharingEnabled = true,
+                startMention = {},
+                onAdditionalOptionButtonClicked = { additionalOptionsState.toggleAttachmentSubMenu() },
+                modifier = Modifier
+            )
+        }
+
+        is AdditionalOptionState.RichTextEditing -> {}
+    }
 }
 
 @Composable

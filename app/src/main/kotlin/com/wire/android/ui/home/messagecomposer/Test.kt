@@ -17,7 +17,6 @@
  */
 package com.wire.android.ui.home.messagecomposer
 
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,12 +42,12 @@ class _MessageComposerStateHolder(
     val inputFocusRequester: FocusRequester,
 ) {
 
-/*    var mwessageComposerState: _MessageComposerState by mutableStateOf(_MessageComposerState._Active(
-        messageComposition = _MessageComposition._Empty,
-        _generalOptionItem = _GeneralOptionItems.AttachFile ,
-        _messageCompositionInputType = _MessageCompositionInputType.Composing,
-        _messageCompositionInputSize = MessageCompositionInputSize.COLLAPSED
-    ))*/
+    /*    var mwessageComposerState: _MessageComposerState by mutableStateOf(_MessageComposerState._Active(
+            messageComposition = _MessageComposition._Empty,
+            _generalOptionItem = _GeneralOptionItems.AttachFile ,
+            _messageCompositionInputType = _MessageCompositionInputType.Composing,
+            _messageCompositionInputSize = MessageCompositionInputSize.COLLAPSED
+        ))*/
 
     var _messageComposerState: _MessageComposerState by mutableStateOf(
         _MessageComposerState._InActive(_MessageComposition._Empty)
@@ -58,9 +57,10 @@ class _MessageComposerStateHolder(
     fun toActive(showAttachmentOption: Boolean) {
         _messageComposerState = _MessageComposerState._Active(
             messageComposition = _MessageComposition._Empty,
-            _generalOptionItem = if (showAttachmentOption) _GeneralOptionItems.AttachFile else _GeneralOptionItems.None,
+            _generalOptionItem = if (showAttachmentOption) _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile else _AttachmentAndAdditionalOptionsSubMenuItems.None,
             _messageCompositionInputType = _MessageCompositionInputType.Composing,
-            _messageCompositionInputSize = MessageCompositionInputSize.COLLAPSED
+            _messageCompositionInputSize = MessageCompositionInputSize.COLLAPSED,
+            _additionalOptionsState = AdditionalOptionState.AttachmentAndAdditionalOptions()
         )
 
 //        inputFocusRequester.requestFocus()
@@ -83,48 +83,47 @@ sealed class _MessageComposerState {
 
     data class _Active(
         override val messageComposition: _MessageComposition,
-        private val _generalOptionItem: _GeneralOptionItems,
+        private val _generalOptionItem: _AttachmentAndAdditionalOptionsSubMenuItems,
         private val _messageCompositionInputType: _MessageCompositionInputType.Composing,
-        val _messageCompositionInputSize: MessageCompositionInputSize
+        private val _messageCompositionInputSize: MessageCompositionInputSize,
+        private val _additionalOptionsState: AdditionalOptionState,
     ) : _MessageComposerState() {
 
         var inputType: _MessageCompositionInputType by mutableStateOf(_messageCompositionInputType)
 
         var inputSize: MessageCompositionInputSize by mutableStateOf(_messageCompositionInputSize)
 
-        var test: _GeneralOptionItems by mutableStateOf(_generalOptionItem)
-
-        fun toggleFullScreen() {
-            Log.d("TEST", "Test $inputType")
-            if (inputSize == MessageCompositionInputSize.COLLAPSED) {
-                if (test == _GeneralOptionItems.AttachFile) {
-                    test = _GeneralOptionItems.None
-                }
-
-                inputSize = MessageCompositionInputSize.EXPANDED
-            } else {
-                inputSize = MessageCompositionInputSize.COLLAPSED
-            }
-        }
-
-        fun toggleAttachmentOptions() {
-            if (test == _GeneralOptionItems.AttachFile) {
-                closeAttachmentAndAdditionalOptions()
-            } else {
-                test = _GeneralOptionItems.AttachFile
-            }
-        }
-
-        fun closeAttachmentAndAdditionalOptions() {
-            test = _GeneralOptionItems.None
-        }
-
+        val additionalOptionsState by mutableStateOf(_additionalOptionsState)
     }
 
     data class _InActive(override val messageComposition: _MessageComposition) : _MessageComposerState() {
         companion object {
             val DEFAULT = _InActive(_MessageComposition._Empty)
         }
+    }
+
+}
+
+sealed class AdditionalOptionState {
+
+    abstract var dupaJasia : _AttachmentAndAdditionalOptionsSubMenuItems
+
+    class AttachmentAndAdditionalOptions : AdditionalOptionState() {
+
+        override var dupaJasia: _AttachmentAndAdditionalOptionsSubMenuItems by mutableStateOf(_AttachmentAndAdditionalOptionsSubMenuItems.None)
+
+        fun toggleAttachmentSubMenu(){
+            dupaJasia = if(dupaJasia != _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile){
+                _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile
+            }else{
+                _AttachmentAndAdditionalOptionsSubMenuItems.None
+            }
+        }
+
+    }
+
+    class RichTextEditing : AdditionalOptionState() {
+        override var dupaJasia: _AttachmentAndAdditionalOptionsSubMenuItems by mutableStateOf(_AttachmentAndAdditionalOptionsSubMenuItems.None)
     }
 
 }
@@ -153,22 +152,11 @@ sealed class _MessageCompositionInputType {
     object SelfDeleting : _MessageCompositionInputType()
 }
 
-sealed class _MessageCompositionOptionsState {
-    data class _AttachmentAndAdditionalOptions(private val optionSelected: _GeneralOptionItems) : _MessageCompositionOptionsState() {
-
-        var value: _GeneralOptionItems by mutableStateOf(optionSelected)
-        fun toggleAttachFileSelected() {
-            value = if (value == _GeneralOptionItems.None) {
-                _GeneralOptionItems.AttachFile
-            } else {
-                _GeneralOptionItems.None
-            }
-        }
-    }
-}
-
-enum class _GeneralOptionItems {
-    None, AttachFile, AttachPicture, TakePhoto, RecordVideo
+enum class _AttachmentAndAdditionalOptionsSubMenuItems {
+    None,
+    AttachFile,
+    Emoji,
+    Gif;
 }
 
 sealed class _MessageComposition() {
