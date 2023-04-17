@@ -59,6 +59,7 @@ fun MessageComposeActionsBox(
     startMention: () -> Unit,
     onAdditionalOptionButtonClicked: () -> Unit,
     onPingClicked: () -> Unit,
+    onGifButtonClicked : () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier.wrapContentSize()) {
@@ -79,7 +80,8 @@ fun MessageComposeActionsBox(
                         isFileSharingEnabled,
                         startMention,
                         onAdditionalOptionButtonClicked,
-                        onPingClicked
+                        onPingClicked,
+                        onGifButtonClicked
                     )
                 }
             }
@@ -93,9 +95,10 @@ fun MessageComposeActions(
     isMentionsSelected: Boolean,
     isEditMessage: Boolean,
     isFileSharingEnabled: Boolean = true,
-    startMention: () -> Unit,
+    onMentionButtonClicked: () -> Unit,
     onAdditionalOptionButtonClicked: () -> Unit,
-    onPingClicked: () -> Unit
+    onPingButtonClicked: () -> Unit,
+    onGifButtonClicked: () -> Unit
 ) {
     val localFeatureVisibilityFlags = LocalFeatureVisibilityFlags.current
 
@@ -110,9 +113,9 @@ fun MessageComposeActions(
             if (!isEditMessage) AdditionalOptionButton(attachmentOptionsDisplayed, isFileSharingEnabled, onAdditionalOptionButtonClicked)
             if (RichTextIcon) RichTextEditingAction()
             if (!isEditMessage && EmojiIcon) AddEmojiAction()
-            if (!isEditMessage && GifIcon) AddGifAction()
-            AddMentionAction(isMentionsSelected, startMention)
-            if (!isEditMessage && PingIcon) PingAction(onPingClicked = onPingClicked)
+            if (!isEditMessage) AddGifAction(true, onGifButtonClicked)
+            AddMentionAction(isMentionsSelected, onMentionButtonClicked)
+            if (!isEditMessage && PingIcon) PingAction(onPingClicked = onPingButtonClicked)
         }
     }
 }
@@ -138,9 +141,13 @@ private fun AddEmojiAction() {
 }
 
 @Composable
-private fun AddGifAction() {
+private fun AddGifAction(isSelected: Boolean, onPingClicked: () -> Unit) {
+    val onButtonClicked = remember(isSelected) {
+        { if (!isSelected) onPingClicked() }
+    }
+
     WireSecondaryIconButton(
-        onButtonClicked = {},
+        onButtonClicked = onPingClicked,
         clickBlockParams = ClickBlockParams(blockWhenSyncing = true, blockWhenConnecting = true),
         iconResource = R.drawable.ic_gif,
         contentDescription = R.string.content_description_conversation_send_gif
@@ -184,7 +191,7 @@ fun PreviewMessageActionsBox() {
         AdditionalOptionButton(isSelected = false, isEnabled = true, onClick = {})
         RichTextEditingAction()
         AddEmojiAction()
-        AddGifAction()
+        AddGifAction(false, {} )
         AddMentionAction(isSelected = false, addMentionAction = {})
         PingAction {}
     }

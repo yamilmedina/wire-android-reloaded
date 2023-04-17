@@ -38,6 +38,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -248,8 +249,9 @@ fun _ActiveMessageComposer(
                 )
             }
 
-            val additionalOptionSubMenuVisible = activeMessageComposerState.additionalOptionsState.dupaJasia == _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile
-                    && !KeyboardHelper.isKeyboardVisible()
+            val additionalOptionSubMenuVisible =
+                activeMessageComposerState.additionalOptionsState.dupaJasia != _AttachmentAndAdditionalOptionsSubMenuItems.None
+                        && !KeyboardHelper.isKeyboardVisible()
 
             val isTransitionToKeyboardOngoing =
                 activeMessageComposerState.additionalOptionsState.dupaJasia == _AttachmentAndAdditionalOptionsSubMenuItems.None && !KeyboardHelper.isKeyboardVisible()
@@ -282,19 +284,6 @@ fun ActiveMessageComposingInput() {
     ComposingInput(MessageCompositionInputSize.COLLAPSED, {}, FocusRequester())
 }
 
-@Composable
-fun AdditionalOptionSubMenu(additionalOptionsState: _AttachmentAndAdditionalOptionsSubMenuItems, modifier: Modifier) {
-    when (additionalOptionsState) {
-        _AttachmentAndAdditionalOptionsSubMenuItems.None -> {}
-        _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile -> {
-            _AttachmentOptionsComponent(
-                modifier = modifier
-            )
-        }
-        _AttachmentAndAdditionalOptionsSubMenuItems.Emoji -> {}
-        _AttachmentAndAdditionalOptionsSubMenuItems.Gif -> {}
-    }
-}
 
 @Composable
 fun AdditionalOptionsMenu(
@@ -305,8 +294,9 @@ fun AdditionalOptionsMenu(
             AttachmentAndAdditionalOptionsMenuItems(
                 isMentionActive = false,
                 isFileSharingEnabled = true,
-                startMention = {},
-                onAdditionalOptionButtonClicked = { additionalOptionsState.toggleAttachmentSubMenu() },
+                onMentionButtonClicked = {},
+                onAdditionalOptionButtonClicked = additionalOptionsState::toggleAttachmentMenu,
+                onGifButtonClicked = additionalOptionsState::toggleGifMenu,
                 modifier = Modifier
             )
         }
@@ -316,11 +306,36 @@ fun AdditionalOptionsMenu(
 }
 
 @Composable
+fun AdditionalOptionSubMenu(additionalOptionsState: _AttachmentAndAdditionalOptionsSubMenuItems, modifier: Modifier) {
+    when (additionalOptionsState) {
+        _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile -> {
+            _AttachmentOptionsComponent(
+                modifier = modifier
+            )
+        }
+        _AttachmentAndAdditionalOptionsSubMenuItems.Emoji -> {}
+        _AttachmentAndAdditionalOptionsSubMenuItems.Gif -> {
+            Box(
+                Modifier
+                    .width(256.dp)
+                    .height(256.dp)
+                    .background(Color.Red)) {
+
+            }
+        }
+
+        _AttachmentAndAdditionalOptionsSubMenuItems.None -> {}
+    }
+}
+
+@Composable
 fun AttachmentAndAdditionalOptionsMenuItems(
     isMentionActive: Boolean,
     isFileSharingEnabled: Boolean,
-    startMention: () -> Unit,
+    onMentionButtonClicked: () -> Unit,
     onAdditionalOptionButtonClicked: () -> Unit = {},
+    onPingClicked: () -> Unit = {},
+    onGifButtonClicked: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(modifier.wrapContentSize()) {
@@ -331,9 +346,10 @@ fun AttachmentAndAdditionalOptionsMenuItems(
                 isMentionActive,
                 false,
                 isFileSharingEnabled,
-                startMention,
+                onMentionButtonClicked = onMentionButtonClicked,
                 onAdditionalOptionButtonClicked = onAdditionalOptionButtonClicked,
-                {}
+                onPingButtonClicked = onPingClicked,
+                onGifButtonClicked = onGifButtonClicked
             )
         }
     }

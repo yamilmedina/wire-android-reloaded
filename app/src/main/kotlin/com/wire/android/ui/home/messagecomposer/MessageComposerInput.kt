@@ -136,6 +136,7 @@ private fun EnabledMessageComposerInput(
                 isFileSharingEnabled = isFileSharingEnabled,
                 startMention = actions.startMention,
                 onAdditionalOptionButtonClicked = actions.onAdditionalOptionButtonClicked,
+                onGifButtonClicked = {},
                 modifier = Modifier.background(colorsScheme().messageComposerBackgroundColor),
                 onPingClicked = actions.onPingClicked
             )

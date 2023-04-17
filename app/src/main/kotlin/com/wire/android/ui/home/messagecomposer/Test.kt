@@ -105,20 +105,28 @@ sealed class _MessageComposerState {
 }
 
 sealed class AdditionalOptionState {
-
-    abstract var dupaJasia : _AttachmentAndAdditionalOptionsSubMenuItems
+    abstract var dupaJasia: _AttachmentAndAdditionalOptionsSubMenuItems
 
     class AttachmentAndAdditionalOptions : AdditionalOptionState() {
 
         override var dupaJasia: _AttachmentAndAdditionalOptionsSubMenuItems by mutableStateOf(_AttachmentAndAdditionalOptionsSubMenuItems.None)
 
-        fun toggleAttachmentSubMenu(){
-            dupaJasia = if(dupaJasia != _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile){
-                _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile
-            }else{
+        fun toggleAttachmentMenu() {
+            dupaJasia = if (dupaJasia == _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile) {
                 _AttachmentAndAdditionalOptionsSubMenuItems.None
+            } else {
+                _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile
             }
         }
+
+        fun toggleGifMenu() {
+            dupaJasia = if (dupaJasia == _AttachmentAndAdditionalOptionsSubMenuItems.Gif) {
+                _AttachmentAndAdditionalOptionsSubMenuItems.None
+            } else {
+                _AttachmentAndAdditionalOptionsSubMenuItems.Gif
+            }
+        }
+
 
     }
 
