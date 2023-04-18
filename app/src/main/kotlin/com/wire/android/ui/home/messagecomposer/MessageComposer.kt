@@ -125,6 +125,7 @@ fun MessageComposerTest(
         when (val messageComposerState = messageComposerStateHolder._messageComposerState) {
             is _MessageComposerState._InActive -> _InActiveMessageComposer(
                 messagesList = messagesList,
+                inActiveComposerState = messageComposerState,
                 onTransistionToActive = onTransistionToActive
             )
 
@@ -142,7 +143,11 @@ fun MessageComposerTest(
 }
 
 @Composable
-fun _InActiveMessageComposer(messagesList: @Composable () -> Unit, onTransistionToActive: (Boolean) -> Unit) {
+fun _InActiveMessageComposer(
+    messagesList: @Composable () -> Unit,
+    onTransistionToActive: (Boolean) -> Unit,
+    inActiveComposerState: _MessageComposerState._InActive
+) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -178,8 +183,7 @@ fun _InActiveMessageComposer(messagesList: @Composable () -> Unit, onTransistion
                 )
             }
 
-            Text(
-                "Test",
+            Text(inActiveComposerState._messageComposition.text.text,
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight()

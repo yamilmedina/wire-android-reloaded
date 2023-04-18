@@ -43,21 +43,15 @@ class _MessageComposerStateHolder(
     val inputFocusRequester: FocusRequester,
 ) {
 
-    /*    var mwessageComposerState: _MessageComposerState by mutableStateOf(_MessageComposerState._Active(
-            messageComposition = _MessageComposition._Empty,
-            _generalOptionItem = _GeneralOptionItems.AttachFile ,
-            _messageCompositionInputType = _MessageCompositionInputType.Composing,
-            _messageCompositionInputSize = MessageCompositionInputSize.COLLAPSED
-        ))*/
-
+    val _messageComposition: _MessageComposition by mutableStateOf(_MessageComposition(TextFieldValue("")))
     var _messageComposerState: _MessageComposerState by mutableStateOf(
-        _MessageComposerState._InActive
+        _MessageComposerState._InActive(_messageComposition)
     )
         private set
 
     fun toActive(showAttachmentOption: Boolean) {
         _messageComposerState = _MessageComposerState._Active(
-            _messageComposition = _MessageComposition(TextFieldValue("")),
+            _messageComposition = _messageComposition,
             _generalOptionItem = if (showAttachmentOption) _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile else _AttachmentAndAdditionalOptionsSubMenuItems.None,
             _messageCompositionInputType = _MessageCompositionInputType.Composing,
             _messageCompositionInputSize = MessageCompositionInputSize.COLLAPSED,
@@ -68,7 +62,7 @@ class _MessageComposerStateHolder(
     }
 
     fun toInActive() {
-        _messageComposerState = _MessageComposerState._InActive
+        _messageComposerState = _MessageComposerState._InActive(_messageComposition)
     }
 
 }
@@ -80,16 +74,15 @@ enum class MessageCompositionInputSize {
 
 data class _MessageComposition(val text: TextFieldValue)
 
-sealed class _MessageComposerState() {
+sealed class _MessageComposerState {
 
     data class _Active(
-        private val _messageComposition: _MessageComposition,
+        val _messageComposition: _MessageComposition,
         private val _generalOptionItem: _AttachmentAndAdditionalOptionsSubMenuItems,
         private val _messageCompositionInputType: _MessageCompositionInputType.Composing,
         private val _messageCompositionInputSize: MessageCompositionInputSize,
         private val _additionalOptionsState: AdditionalOptionState,
     ) : _MessageComposerState() {
-
 
         var messageComposition: _MessageComposition by mutableStateOf(_messageComposition)
 
@@ -104,7 +97,7 @@ sealed class _MessageComposerState() {
         }
     }
 
-    object _InActive : _MessageComposerState()
+    data class _InActive(val _messageComposition: _MessageComposition) : _MessageComposerState()
 
 }
 
