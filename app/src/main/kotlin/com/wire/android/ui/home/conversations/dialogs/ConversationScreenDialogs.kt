@@ -57,8 +57,9 @@ fun ConversationScreenDialogs(
         }
     }
 
-    LaunchedEffect(conversationCallViewModel.conversationCallViewState.shouldShowJoinAnywayDialog) {
-        updateDialogType(JOIN_CALL_ANYWAY)
+    LaunchedEffect(conversationCallViewModel.conversationCallViewState) {
+        if (conversationCallViewModel.conversationCallViewState.shouldShowJoinAnywayDialog)
+            updateDialogType(JOIN_CALL_ANYWAY)
     }
 
     LaunchedEffect(messageComposerViewModel.deleteMessageDialogsState) {
