@@ -22,13 +22,13 @@ package com.wire.android.ui.home.conversations
 
 import app.cash.turbine.test
 import com.wire.android.config.CoroutineTestExtension
-import com.wire.kalium.logic.feature.asset.GetAssetSizeLimitUseCaseImpl.Companion.ASSET_SIZE_DEFAULT_LIMIT_BYTES
-import com.wire.kalium.logic.feature.asset.GetAssetSizeLimitUseCaseImpl.Companion.IMAGE_SIZE_LIMIT_BYTES
 import com.wire.android.ui.home.conversations.delete.DeleteMessageDialogActiveState
-import com.wire.android.ui.home.conversations.delete.DeleteMessageDialogsState
+import com.wire.android.ui.home.conversations.delete.DeleteMessageDialogsStates
 import com.wire.android.ui.home.conversations.model.AssetBundle
 import com.wire.android.ui.home.conversations.model.AttachmentType
 import com.wire.kalium.logic.data.team.Team
+import com.wire.kalium.logic.feature.asset.GetAssetSizeLimitUseCaseImpl.Companion.ASSET_SIZE_DEFAULT_LIMIT_BYTES
+import com.wire.kalium.logic.feature.asset.GetAssetSizeLimitUseCaseImpl.Companion.IMAGE_SIZE_LIMIT_BYTES
 import io.mockk.coVerify
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -54,7 +54,7 @@ class MessageComposerViewModelTest {
         viewModel.showDeleteMessageDialog("", true)
 
         // Then
-        viewModel.deleteMessageDialogsState shouldBeEqualTo DeleteMessageDialogsState.States(
+        viewModel.deleteMessageDialogsState shouldBeEqualTo DeleteMessageDialogsStates(
             forYourself = DeleteMessageDialogActiveState.Hidden,
             forEveryone = DeleteMessageDialogActiveState.Visible("", viewModel.conversationId)
         )
@@ -71,7 +71,7 @@ class MessageComposerViewModelTest {
         viewModel.showDeleteMessageDialog("", false)
 
         // Then
-        viewModel.deleteMessageDialogsState shouldBeEqualTo DeleteMessageDialogsState.States(
+        viewModel.deleteMessageDialogsState shouldBeEqualTo DeleteMessageDialogsStates(
             forYourself = DeleteMessageDialogActiveState.Visible("", viewModel.conversationId),
             forEveryone = DeleteMessageDialogActiveState.Hidden
         )
@@ -88,7 +88,7 @@ class MessageComposerViewModelTest {
         viewModel.deleteMessageHelper.showDeleteMessageForYourselfDialog("")
 
         // Then
-        viewModel.deleteMessageDialogsState shouldBeEqualTo DeleteMessageDialogsState.States(
+        viewModel.deleteMessageDialogsState shouldBeEqualTo DeleteMessageDialogsStates(
             forYourself = DeleteMessageDialogActiveState.Visible("", viewModel.conversationId),
             forEveryone = DeleteMessageDialogActiveState.Hidden
         )
@@ -103,7 +103,7 @@ class MessageComposerViewModelTest {
         viewModel.deleteMessageHelper.onDeleteDialogDismissed()
 
         // Then
-        viewModel.deleteMessageDialogsState shouldBeEqualTo DeleteMessageDialogsState.States(
+        viewModel.deleteMessageDialogsState shouldBeEqualTo DeleteMessageDialogsStates(
             forYourself = DeleteMessageDialogActiveState.Hidden, forEveryone = DeleteMessageDialogActiveState.Hidden
         )
     }
@@ -140,7 +140,7 @@ class MessageComposerViewModelTest {
         viewModel.deleteMessageHelper.onDeleteMessage("messageId", true)
 
         // Then
-        val expectedState = DeleteMessageDialogsState.States(
+        val expectedState = DeleteMessageDialogsStates(
             DeleteMessageDialogActiveState.Hidden,
             DeleteMessageDialogActiveState.Hidden
         )

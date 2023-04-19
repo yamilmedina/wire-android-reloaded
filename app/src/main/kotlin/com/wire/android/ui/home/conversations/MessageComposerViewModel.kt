@@ -21,7 +21,6 @@
 package com.wire.android.ui.home.conversations
 
 import android.net.Uri
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -49,7 +48,7 @@ import com.wire.android.ui.home.conversations.ConversationSnackbarMessages.Error
 import com.wire.android.ui.home.conversations.ConversationSnackbarMessages.ErrorMaxImageSize
 import com.wire.android.ui.home.conversations.delete.DeleteMessageDialogActiveState
 import com.wire.android.ui.home.conversations.delete.DeleteMessageDialogHelper
-import com.wire.android.ui.home.conversations.delete.DeleteMessageDialogsState
+import com.wire.android.ui.home.conversations.delete.DeleteMessageDialogsStates
 import com.wire.android.ui.home.conversations.model.AssetBundle
 import com.wire.android.ui.home.conversations.model.AttachmentType
 import com.wire.android.ui.home.conversations.model.EditMessageBundle
@@ -60,7 +59,6 @@ import com.wire.android.util.FileManager
 import com.wire.android.util.ImageUtil
 import com.wire.android.util.dispatchers.DispatcherProvider
 import com.wire.android.util.ui.WireSessionImageLoader
-import com.wire.kalium.logic.configuration.SelfDeletingMessagesStatus
 import com.wire.kalium.logic.data.asset.KaliumFileSystem
 import com.wire.kalium.logic.data.id.QualifiedIdMapper
 import com.wire.kalium.logic.data.user.OtherUser
@@ -135,8 +133,8 @@ class MessageComposerViewModel @Inject constructor(
 
     var mentionsToSelect by mutableStateOf<List<Contact>>(listOf())
 
-    var deleteMessageDialogsState: DeleteMessageDialogsState by mutableStateOf(
-        DeleteMessageDialogsState.States(
+    var deleteMessageDialogsState: DeleteMessageDialogsStates by mutableStateOf(
+        DeleteMessageDialogsStates(
             forYourself = DeleteMessageDialogActiveState.Hidden,
             forEveryone = DeleteMessageDialogActiveState.Hidden
         )
@@ -377,8 +375,8 @@ class MessageComposerViewModel @Inject constructor(
             }
         }
 
-    private fun updateDeleteDialogState(newValue: (DeleteMessageDialogsState.States) -> DeleteMessageDialogsState) =
-        (deleteMessageDialogsState as? DeleteMessageDialogsState.States)?.let { deleteMessageDialogsState = newValue(it) }
+    private fun updateDeleteDialogState(newValue: (DeleteMessageDialogsStates) -> DeleteMessageDialogsStates) =
+        deleteMessageDialogsState.let { deleteMessageDialogsState = newValue(it) }
 
     fun updateConversationReadDate(utcISO: String) {
         viewModelScope.launch(dispatchers.io()) {

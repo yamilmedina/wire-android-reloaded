@@ -14,11 +14,9 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see http://www.gnu.org/licenses/.
- *
- *
  */
 
-package com.wire.android.ui.home.conversations
+package com.wire.android.ui.home.conversations.dialogs
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
@@ -26,6 +24,7 @@ import com.wire.android.R
 import com.wire.android.ui.common.WireDialog
 import com.wire.android.ui.common.WireDialogButtonProperties
 import com.wire.android.ui.common.WireDialogButtonType
+import com.wire.android.ui.home.conversations.DownloadedAssetDialogVisibilityState
 import com.wire.android.util.permission.rememberWriteStorageRequestFlow
 
 @Composable
