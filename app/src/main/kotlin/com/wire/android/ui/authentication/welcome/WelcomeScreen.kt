@@ -68,6 +68,7 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import com.wire.android.R
+import com.wire.android.config.LocalCustomUiConfigurationProvider
 import com.wire.android.ui.authentication.ServerTitle
 import com.wire.android.ui.common.button.WirePrimaryButton
 import com.wire.android.ui.common.button.WireSecondaryButton
@@ -149,31 +150,35 @@ private fun WelcomeContent(viewModel: WelcomeViewModel) {
                     })
                 FeatureDisabledWithProxyDialogContent(dialogState = createPersonalAccountDisabledWithProxyDialogState)
 
-                CreateEnterpriseAccountButton {
-                    if (viewModel.isProxyEnabled()) {
-                        enterpriseDisabledWithProxyDialogState.show(
-                            enterpriseDisabledWithProxyDialogState.savedState ?: FeatureDisabledWithProxyDialogState(
-                                R.string.create_team_not_supported_dialog_description, viewModel.state.teams
+                if (LocalCustomUiConfigurationProvider.current.isAccountCreationAllowed) {
+                    CreateEnterpriseAccountButton {
+                        if (viewModel.isProxyEnabled()) {
+                            enterpriseDisabledWithProxyDialogState.show(
+                                enterpriseDisabledWithProxyDialogState.savedState ?: FeatureDisabledWithProxyDialogState(
+                                    R.string.create_team_not_supported_dialog_description, viewModel.state.teams
+                                )
                             )
-                        )
-                    } else {
-                        viewModel.goToCreateEnterpriseAccount()
+                        } else {
+                            viewModel.goToCreateEnterpriseAccount()
+                        }
                     }
                 }
             }
 
-            WelcomeFooter(modifier = Modifier.padding(horizontal = MaterialTheme.wireDimensions.welcomeTextHorizontalPadding),
-                onPrivateAccountClick = {
-                    if (viewModel.isProxyEnabled()) {
-                        createPersonalAccountDisabledWithProxyDialogState.show(
-                            createPersonalAccountDisabledWithProxyDialogState.savedState ?: FeatureDisabledWithProxyDialogState(
-                                R.string.create_personal_account_not_supported_dialog_description
+            if (LocalCustomUiConfigurationProvider.current.isAccountCreationAllowed) {
+                WelcomeFooter(modifier = Modifier.padding(horizontal = MaterialTheme.wireDimensions.welcomeTextHorizontalPadding),
+                    onPrivateAccountClick = {
+                        if (viewModel.isProxyEnabled()) {
+                            createPersonalAccountDisabledWithProxyDialogState.show(
+                                createPersonalAccountDisabledWithProxyDialogState.savedState ?: FeatureDisabledWithProxyDialogState(
+                                    R.string.create_personal_account_not_supported_dialog_description
+                                )
                             )
-                        )
-                    } else {
-                        viewModel.goToCreatePrivateAccount()
-                    }
-                })
+                        } else {
+                            viewModel.goToCreatePrivateAccount()
+                        }
+                    })
+            }
         }
 
     }
@@ -209,7 +214,10 @@ private fun WelcomeCarousel() {
 
 @OptIn(ExperimentalPagerApi::class, ExperimentalCoroutinesApi::class)
 private suspend fun autoScrollCarousel(
-    pageState: PagerState, initialPage: Int, circularItemsList: List<CarouselPageData>, delay: Long
+    pageState: PagerState,
+    initialPage: Int,
+    circularItemsList: List<CarouselPageData>,
+    delay: Long
 ) = snapshotFlow { pageState.currentPage }.distinctUntilChanged()
     .scan(initialPage to initialPage) { (_, previousPage), currentPage -> previousPage to currentPage }
     .flatMapLatest { (previousPage, currentPage) ->
