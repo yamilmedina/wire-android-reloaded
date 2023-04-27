@@ -52,10 +52,10 @@ class _MessageComposerStateHolder(
     fun toActive(showAttachmentOption: Boolean) {
         _messageComposerState = _MessageComposerState._Active(
             _messageComposition = _messageComposition,
-            _generalOptionItem = if (showAttachmentOption) _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile else _AttachmentAndAdditionalOptionsSubMenuItems.None,
+            _generalOptionItem = if (showAttachmentOption) _AdditionalOptionSubMenuState.AttachFile else _AdditionalOptionSubMenuState.None,
             _messageCompositionInputType = _MessageCompositionInputType.Composing,
             _messageCompositionInputSize = MessageCompositionInputSize.COLLAPSED,
-            _additionalOptionsState = AdditionalOptionState.AttachmentAndAdditionalOptions()
+            _additionalOptionsState = AdditionalOptionMenuState.AttachmentAndAdditionalOptionsMenu()
         )
 
 //        inputFocusRequester.requestFocus()
@@ -78,10 +78,10 @@ sealed class _MessageComposerState {
 
     data class _Active(
         val _messageComposition: _MessageComposition,
-        private val _generalOptionItem: _AttachmentAndAdditionalOptionsSubMenuItems,
+        private val _generalOptionItem: _AdditionalOptionSubMenuState,
         private val _messageCompositionInputType: _MessageCompositionInputType.Composing,
         private val _messageCompositionInputSize: MessageCompositionInputSize,
-        private val _additionalOptionsState: AdditionalOptionState,
+        private val _additionalOptionsState: AdditionalOptionMenuState,
     ) : _MessageComposerState() {
 
         var messageComposition: _MessageComposition by mutableStateOf(_messageComposition)
@@ -90,7 +90,11 @@ sealed class _MessageComposerState {
 
         var inputSize: MessageCompositionInputSize by mutableStateOf(_messageCompositionInputSize)
 
-        val additionalOptionsState by mutableStateOf(_additionalOptionsState)
+        val additionalOptionsState: AdditionalOptionMenuState by mutableStateOf(_additionalOptionsState)
+
+        fun toEphemeralInputType() {
+            inputType = _MessageCompositionInputType.Ephemeral
+        }
 
         fun messageTextChanged(it: TextFieldValue) {
             messageComposition = messageComposition.copy(it)
@@ -101,33 +105,33 @@ sealed class _MessageComposerState {
 
 }
 
-sealed class AdditionalOptionState {
-    abstract var dupaJasia: _AttachmentAndAdditionalOptionsSubMenuItems
+sealed class AdditionalOptionMenuState {
+    abstract var dupaJasia: _AdditionalOptionSubMenuState
 
-    class AttachmentAndAdditionalOptions : AdditionalOptionState() {
+    class AttachmentAndAdditionalOptionsMenu : AdditionalOptionMenuState() {
 
-        override var dupaJasia: _AttachmentAndAdditionalOptionsSubMenuItems by mutableStateOf(_AttachmentAndAdditionalOptionsSubMenuItems.None)
+        override var dupaJasia: _AdditionalOptionSubMenuState by mutableStateOf(_AdditionalOptionSubMenuState.None)
 
         fun toggleAttachmentMenu() {
-            dupaJasia = if (dupaJasia == _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile) {
-                _AttachmentAndAdditionalOptionsSubMenuItems.None
+            dupaJasia = if (dupaJasia == _AdditionalOptionSubMenuState.AttachFile) {
+                _AdditionalOptionSubMenuState.None
             } else {
-                _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile
+                _AdditionalOptionSubMenuState.AttachFile
             }
         }
 
         fun toggleGifMenu() {
-            dupaJasia = if (dupaJasia == _AttachmentAndAdditionalOptionsSubMenuItems.Gif) {
-                _AttachmentAndAdditionalOptionsSubMenuItems.None
+            dupaJasia = if (dupaJasia == _AdditionalOptionSubMenuState.Gif) {
+                _AdditionalOptionSubMenuState.None
             } else {
-                _AttachmentAndAdditionalOptionsSubMenuItems.Gif
+                _AdditionalOptionSubMenuState.Gif
             }
         }
 
     }
 
-    class RichTextEditing : AdditionalOptionState() {
-        override var dupaJasia: _AttachmentAndAdditionalOptionsSubMenuItems by mutableStateOf(_AttachmentAndAdditionalOptionsSubMenuItems.None)
+    class RichTextEditing : AdditionalOptionMenuState() {
+        override var dupaJasia: _AdditionalOptionSubMenuState by mutableStateOf(_AdditionalOptionSubMenuState.None)
     }
 
 }
@@ -153,12 +157,14 @@ data class _MessageCompositionInputState(
 sealed class _MessageCompositionInputType {
     object Composing : _MessageCompositionInputType()
     object Editing : _MessageCompositionInputType()
-    object SelfDeleting : _MessageCompositionInputType()
+    object Ephemeral : _MessageCompositionInputType()
 }
 
-enum class _AttachmentAndAdditionalOptionsSubMenuItems {
+enum class _AdditionalOptionSubMenuState {
     None,
     AttachFile,
+    RecordAudio,
+    AttachImage,
     Emoji,
     Gif;
 }

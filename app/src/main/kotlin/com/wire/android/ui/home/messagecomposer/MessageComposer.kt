@@ -38,6 +38,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -245,24 +246,27 @@ fun _ActiveMessageComposer(
 
                 ActiveMessageComposingInput(
                     messageText = activeMessageComposerState.messageComposition,
+                    inputType = activeMessageComposerState.inputType,
+                    inputSize = activeMessageComposerState.inputSize,
                     onMessageTextChanged = activeMessageComposerState::messageTextChanged
                 )
                 AdditionalOptionsMenu(
-                    additionalOptionsState = activeMessageComposerState.additionalOptionsState
+                    additionalOptionsState = activeMessageComposerState.additionalOptionsState,
+                    onEphemeralOptionItemClicked = activeMessageComposerState::toEphemeralInputType
                 )
             }
 
             val additionalOptionSubMenuVisible =
-                activeMessageComposerState.additionalOptionsState.dupaJasia != _AttachmentAndAdditionalOptionsSubMenuItems.None
+                activeMessageComposerState.additionalOptionsState.dupaJasia != _AdditionalOptionSubMenuState.None
                         && !KeyboardHelper.isKeyboardVisible()
 
             val isTransitionToOpenKeyboardOngoing =
-                activeMessageComposerState.additionalOptionsState.dupaJasia == _AttachmentAndAdditionalOptionsSubMenuItems.None
+                activeMessageComposerState.additionalOptionsState.dupaJasia == _AdditionalOptionSubMenuState.None
                         && !KeyboardHelper.isKeyboardVisible()
 
             if (additionalOptionSubMenuVisible) {
                 AdditionalOptionSubMenu(
-                    activeMessageComposerState.additionalOptionsState,
+                    activeMessageComposerState.additionalOptionsState.dupaJasia,
                     modifier = Modifier
                         .height(keyboardHeight.height)
                         .fillMaxWidth()
@@ -286,49 +290,81 @@ fun _ActiveMessageComposer(
 @Composable
 fun ActiveMessageComposingInput(
     messageText: _MessageComposition,
+    inputType: _MessageCompositionInputType,
+    inputSize: MessageCompositionInputSize,
     onMessageTextChanged: (TextFieldValue) -> Unit
 ) {
-    ComposingInput(
-        messageText = messageText.text,
-        inputSize = MessageCompositionInputSize.COLLAPSED,
-        onFocused = {},
-        focusRequester = FocusRequester(),
-        onMessageTextChanged = onMessageTextChanged
-    )
+    when (inputType) {
+        _MessageCompositionInputType.Composing -> {
+            ComposingInput(
+                messageText = messageText.text,
+                inputSize = inputSize,
+                onFocused = { },
+                focusRequester = FocusRequester(),
+                onMessageTextChanged = onMessageTextChanged
+            )
+        }
+
+        _MessageCompositionInputType.Editing -> {
+            EditingInput(
+                messageText = messageText.text,
+                inputSize = inputSize,
+                onFocused = { },
+                focusRequester = FocusRequester(),
+                onMessageTextChanged = onMessageTextChanged
+            )
+        }
+
+        _MessageCompositionInputType.Ephemeral -> {
+            SelfDeletingInput(
+                messageText = messageText.text,
+                inputSize = inputSize,
+                onFocused = { },
+                focusRequester = FocusRequester(),
+                onMessageTextChanged = onMessageTextChanged
+            )
+        }
+    }
 }
 
 @Composable
 fun AdditionalOptionsMenu(
-    additionalOptionsState: AdditionalOptionState
+    additionalOptionsState: AdditionalOptionMenuState,
+    onEphemeralOptionItemClicked: () -> Unit
 ) {
     when (additionalOptionsState) {
-        is AdditionalOptionState.AttachmentAndAdditionalOptions -> {
+        is AdditionalOptionMenuState.AttachmentAndAdditionalOptionsMenu -> {
             AttachmentAndAdditionalOptionsMenuItems(
                 isMentionActive = false,
                 isFileSharingEnabled = true,
-                onMentionButtonClicked = {},
+                onMentionButtonClicked = onEphemeralOptionItemClicked,
                 onAdditionalOptionButtonClicked = additionalOptionsState::toggleAttachmentMenu,
                 onGifButtonClicked = additionalOptionsState::toggleGifMenu,
                 modifier = Modifier
             )
         }
 
-        is AdditionalOptionState.RichTextEditing -> {}
+        is AdditionalOptionMenuState.RichTextEditing -> {
+            Box(Modifier.background(Color.Red).size(128.dp))
+
+        }
     }
 }
 
 @Composable
-fun AdditionalOptionSubMenu(additionalOptionsState: AdditionalOptionState, modifier: Modifier) {
-    when (additionalOptionsState.dupaJasia) {
-        _AttachmentAndAdditionalOptionsSubMenuItems.AttachFile -> {
+fun AdditionalOptionSubMenu(additionalOptionsState: _AdditionalOptionSubMenuState, modifier: Modifier) {
+    when (additionalOptionsState) {
+        _AdditionalOptionSubMenuState.AttachFile -> {
             _AttachmentOptionsComponent(
                 modifier = modifier
             )
         }
 
-        _AttachmentAndAdditionalOptionsSubMenuItems.Emoji -> {}
-        _AttachmentAndAdditionalOptionsSubMenuItems.Gif -> {}
-        _AttachmentAndAdditionalOptionsSubMenuItems.None -> {}
+        _AdditionalOptionSubMenuState.Emoji -> {}
+        _AdditionalOptionSubMenuState.Gif -> {}
+        _AdditionalOptionSubMenuState.RecordAudio -> {}
+        _AdditionalOptionSubMenuState.AttachImage -> {}
+        _AdditionalOptionSubMenuState.None -> {}
     }
 }
 
@@ -356,6 +392,84 @@ fun AttachmentAndAdditionalOptionsMenuItems(
                 onGifButtonClicked = onGifButtonClicked
             )
         }
+    }
+}
+
+
+@Composable
+fun SelfDeletingInput(
+    messageText: TextFieldValue,
+    inputSize: MessageCompositionInputSize,
+    onFocused: () -> Unit,
+    focusRequester: FocusRequester,
+    onMessageTextChanged: (TextFieldValue) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
+        verticalAlignment = Alignment.Bottom
+    ) {
+        _MessageComposerInput(
+            messageText = messageText,
+            onMessageTextChanged = onMessageTextChanged,
+            singleLine = false,
+            onFocusChanged = { isFocused -> if (isFocused) onFocused() },
+            focusRequester = focusRequester,
+            modifier = Modifier
+                .weight(1f)
+                .then(
+                    when (inputSize) {
+                        MessageCompositionInputSize.COLLAPSED -> Modifier.heightIn(max = dimensions().messageComposerActiveInputMaxHeight)
+                        MessageCompositionInputSize.EXPANDED -> Modifier.fillMaxHeight()
+                    }
+                )
+        )
+        MessageSendActions(
+            onSendButtonClicked = {
+
+            },
+            sendButtonEnabled = true
+        )
+    }
+}
+
+
+@Composable
+fun EditingInput(
+    messageText: TextFieldValue,
+    inputSize: MessageCompositionInputSize,
+    onFocused: () -> Unit,
+    focusRequester: FocusRequester,
+    onMessageTextChanged: (TextFieldValue) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
+        verticalAlignment = Alignment.Bottom
+    ) {
+        _MessageComposerInput(
+            messageText = messageText,
+            onMessageTextChanged = onMessageTextChanged,
+            singleLine = false,
+            onFocusChanged = { isFocused -> if (isFocused) onFocused() },
+            focusRequester = focusRequester,
+            modifier = Modifier
+                .weight(1f)
+                .then(
+                    when (inputSize) {
+                        MessageCompositionInputSize.COLLAPSED -> Modifier.heightIn(max = dimensions().messageComposerActiveInputMaxHeight)
+                        MessageCompositionInputSize.EXPANDED -> Modifier.fillMaxHeight()
+                    }
+                )
+        )
+        MessageSendActions(
+            onSendButtonClicked = {
+
+            },
+            sendButtonEnabled = true
+        )
     }
 }
 
