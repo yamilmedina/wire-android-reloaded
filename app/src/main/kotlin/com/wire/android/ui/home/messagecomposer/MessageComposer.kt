@@ -243,7 +243,6 @@ fun _ActiveMessageComposer(
                 ) {
                     messageContent()
                 }
-
                 ActiveMessageComposingInput(
                     messageText = activeMessageComposerState.messageComposition,
                     inputType = activeMessageComposerState.inputType,
