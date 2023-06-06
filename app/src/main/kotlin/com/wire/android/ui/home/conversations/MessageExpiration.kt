@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.work.Operation.State.IN_PROGRESS
 import com.wire.android.R
 import com.wire.android.ui.home.conversations.model.ExpirationStatus
 import com.wire.android.ui.home.conversations.model.UIMessage
@@ -39,7 +40,7 @@ class SelfDeletionTimerHelper(private val context: Context) {
                 SelfDeletionTimerState.Expirable(context.resources, timeLeft, expireAfter)
             }
         } else {
-            SelfDeletionTimerState.NotExpirable
+            SelfDeletionTimerState.NotExpiring
         }
     }
 
@@ -224,8 +225,8 @@ class SelfDeletionTimerHelper(private val context: Context) {
 
                     return if (timeElapsedRatio < LOW_END_TIME_ELAPSED_RATIO_BOUNDARY_FOR_PROPORTIONAL_ALPHA_CHANGE) {
                         INVISIBLE_BACKGROUND_COLOR_ALPHA_VALUE
-                    } else if (LOW_END_TIME_ELAPSED_RATIO_BOUNDARY_FOR_PROPORTIONAL_ALPHA_CHANGE <= timeElapsedRatio
-                        && timeElapsedRatio <= HIGH_END_TIME_ELAPSED_RATIO_BOUNDARY_FOR_PROPORTIONAL_ALPHA_CHANGE
+                    } else if (timeElapsedRatio in LOW_END_TIME_ELAPSED_RATIO_BOUNDARY_FOR_PROPORTIONAL_ALPHA_CHANGE
+                        ..HIGH_END_TIME_ELAPSED_RATIO_BOUNDARY_FOR_PROPORTIONAL_ALPHA_CHANGE
                     ) {
                         val halfTimeSlice = expireAfter.times(HALF_RATIO_VALUE)
                         val quarterTimeLeftSlice = expireAfter.times(QUARTER_RATIO_VALUE)
@@ -243,42 +244,45 @@ class SelfDeletionTimerHelper(private val context: Context) {
             }
         }
 
-        object NotExpirable : SelfDeletionTimerState()
+        object NotExpiring : SelfDeletionTimerState()
     }
 }
 
 @Composable
 fun startDeletionTimer(
     message: UIMessage.Regular,
-    expirableTimer: SelfDeletionTimerHelper.SelfDeletionTimerState.Expirable,
+    expirationTimer: SelfDeletionTimerHelper.SelfDeletionTimerState.Expirable,
     onStartMessageSelfDeletion: (UIMessage.Regular) -> Unit
 ) {
     message.messageContent?.let {
         when (val messageContent = message.messageContent) {
             is UIMessageContent.AssetMessage -> startAssetDeletion(
-                expirableTimer = expirableTimer,
+                expirationTimer = expirationTimer,
                 onSelfDeletingMessageRead = { onStartMessageSelfDeletion(message) },
-                downloadStatus = messageContent.downloadStatus
+                downloadStatus = messageContent.downloadStatus,
+                uploadStatus = messageContent.uploadStatus
             )
 
             is UIMessageContent.AudioAssetMessage -> startAssetDeletion(
-                expirableTimer = expirableTimer,
+                expirationTimer = expirationTimer,
                 onSelfDeletingMessageRead = { onStartMessageSelfDeletion(message) },
-                downloadStatus = messageContent.downloadStatus
+                downloadStatus = messageContent.downloadStatus,
+                uploadStatus = messageContent.uploadStatus
             )
 
             is UIMessageContent.ImageMessage -> startAssetDeletion(
-                expirableTimer = expirableTimer,
+                expirationTimer = expirationTimer,
                 onSelfDeletingMessageRead = { onStartMessageSelfDeletion(message) },
-                downloadStatus = messageContent.downloadStatus
+                downloadStatus = messageContent.downloadStatus,
+                uploadStatus = messageContent.uploadStatus
             )
 
             is UIMessageContent.TextMessage -> {
                 LaunchedEffect(Unit) {
                     onStartMessageSelfDeletion(message)
                 }
-                LaunchedEffect(expirableTimer.timeLeft) {
-                    with(expirableTimer) {
+                LaunchedEffect(expirationTimer.timeLeft) {
+                    with(expirationTimer) {
                         if (timeLeft != ZERO) {
                             delay(updateInterval())
                             decreaseTimeLeft(updateInterval())
@@ -294,18 +298,27 @@ fun startDeletionTimer(
 
 @Composable
 private fun startAssetDeletion(
-    expirableTimer: SelfDeletionTimerHelper.SelfDeletionTimerState.Expirable,
+    expirationTimer: SelfDeletionTimerHelper.SelfDeletionTimerState.Expirable,
     onSelfDeletingMessageRead: () -> Unit,
-    downloadStatus: Message.DownloadStatus
+    downloadStatus: Message.DownloadStatus,
+    uploadStatus: Message.UploadStatus
 ) {
+    LaunchedEffect(uploadStatus) {
+        if (uploadStatus == Message.UploadStatus.UPLOADED)
+            onSelfDeletingMessageRead()
+    }
     LaunchedEffect(downloadStatus) {
-        if (downloadStatus == Message.DownloadStatus.SAVED_EXTERNALLY || downloadStatus == Message.DownloadStatus.SAVED_INTERNALLY) {
+        if (uploadStatus != Message.UploadStatus.UPLOAD_IN_PROGRESS &&
+            (downloadStatus == Message.DownloadStatus.SAVED_EXTERNALLY || downloadStatus == Message.DownloadStatus.SAVED_INTERNALLY)
+        ) {
             onSelfDeletingMessageRead()
         }
     }
-    LaunchedEffect(expirableTimer.timeLeft, downloadStatus) {
-        if (downloadStatus == Message.DownloadStatus.SAVED_EXTERNALLY || downloadStatus == Message.DownloadStatus.SAVED_INTERNALLY) {
-            with(expirableTimer) {
+    LaunchedEffect(expirationTimer.timeLeft, downloadStatus) {
+        if (uploadStatus != Message.UploadStatus.UPLOAD_IN_PROGRESS &&
+            (downloadStatus == Message.DownloadStatus.SAVED_EXTERNALLY || downloadStatus == Message.DownloadStatus.SAVED_INTERNALLY)
+        ) {
+            with(expirationTimer) {
                 if (timeLeft != ZERO) {
                     delay(updateInterval())
                     decreaseTimeLeft(updateInterval())

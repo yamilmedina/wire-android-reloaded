@@ -107,7 +107,7 @@ fun MessageItem(
         if (selfDeletionTimerState is SelfDeletionTimerHelper.SelfDeletionTimerState.Expirable) {
             startDeletionTimer(
                 message = message,
-                expirableTimer = selfDeletionTimerState,
+                expirationTimer = selfDeletionTimerState,
                 onStartMessageSelfDeletion = onSelfDeletingMessageRead
             )
         }
