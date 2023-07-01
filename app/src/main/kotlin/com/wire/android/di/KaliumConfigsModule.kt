@@ -56,7 +56,8 @@ class KaliumConfigsModule {
             guestRoomLink = BuildConfig.ENABLE_GUEST_ROOM_LINK,
             wipeOnCookieInvalid = BuildConfig.WIPE_ON_COOKIE_INVALID,
             wipeOnDeviceRemoval = BuildConfig.WIPE_ON_DEVICE_REMOVAL,
-            wipeOnRootedDevice = BuildConfig.WIPE_ON_ROOTED_DEVICE
+            wipeOnRootedDevice = BuildConfig.WIPE_ON_ROOTED_DEVICE,
+            isWebSocketEnabledByDefault = BuildConfig.WEBSOCKET_ENABLED_BY_DEFAULT
         )
     }
 }
