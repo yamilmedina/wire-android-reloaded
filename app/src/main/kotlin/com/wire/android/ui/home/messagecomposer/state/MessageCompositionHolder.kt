@@ -54,15 +54,13 @@ class MessageCompositionHolder(
     quotedMessageId: String? = null,
     selectedMentions: List<UiMention> = emptyList()
 ) {
-    var editMessageId by mutableStateOf(editMessageId)
-        private set
+    private var editMessageId by mutableStateOf(editMessageId)
 
     var quotedMessage by mutableStateOf(quotedMessage)
         private set
-    var quotedMessageId by mutableStateOf(quotedMessageId)
-        private set
-    var selectedMentions by mutableStateOf(selectedMentions)
-        private set
+
+    private var quotedMessageId by mutableStateOf(quotedMessageId)
+    private var selectedMentions by mutableStateOf(selectedMentions)
 
     private companion object {
         const val RICH_TEXT_MARKDOWN_MULTIPLIER = 2
