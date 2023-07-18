@@ -172,6 +172,7 @@ pipeline {
                 }
 
                 stage('Spawn Emulator 9.0') {
+                    agent { label 'built-in' }
                     when {
                         expression { params.RUN_ACCEPTANCE_TESTS }
                     }
@@ -182,6 +183,7 @@ pipeline {
                 }
 
                 stage('Spawn Emulator 10.0') {
+                    agent { label 'built-in' }
                     when {
                         expression { params.RUN_ACCEPTANCE_TESTS }
                     }
