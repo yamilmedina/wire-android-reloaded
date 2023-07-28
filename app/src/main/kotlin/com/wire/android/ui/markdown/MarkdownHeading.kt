@@ -50,7 +50,8 @@ fun MarkdownHeading(heading: Heading, nodeData: NodeData) {
                 annotatedString = text,
                 style = style,
                 onLongClick = nodeData.onLongClick,
-                onOpenProfile = nodeData.onOpenProfile
+                onOpenProfile = nodeData.onOpenProfile,
+                id = "Test"
             )
         }
     } else {

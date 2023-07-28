@@ -24,6 +24,7 @@ import android.os.Build
 import android.text.SpannableString
 import android.text.style.URLSpan
 import android.text.util.Linkify
+import android.util.Log
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
@@ -56,7 +57,9 @@ fun ClickableText(
     style: TextStyle = LocalTextStyle.current,
     onClick: (Int) -> Unit,
     onLongClick: (() -> Unit)? = null,
+    id: String = "test"
 ) {
+    Log.d("TEST", "inside clickable text of id $id")
     val layoutResult = remember { mutableStateOf<TextLayoutResult?>(null) }
 
     // to provide current lambdas and states otherwise it will use the ones it got when starting a LaunchedEffect inside pointerInput
@@ -67,11 +70,15 @@ fun ClickableText(
     val pressIndicator = Modifier.pointerInput(Unit) {
         detectTapGestures(
             onTap = { pos ->
+                Log.d("CLICK", "on click with id of $id")
                 currentLayoutResult.value?.let { layoutResult ->
                     currentOnClick(layoutResult.getOffsetForPosition(pos))
                 }
             },
-            onLongPress = { currentOnLongClick?.invoke() }
+            onLongPress = {
+                Log.d("TEST", "on long press from ClickableText with id of $id")
+                currentOnLongClick?.invoke()
+            }
         )
     }
     Text(
@@ -85,7 +92,6 @@ fun ClickableText(
         maxLines = maxLines,
         onTextLayout = {
             layoutResult.value = it
-            onTextLayout(it)
         },
         style = style
     )

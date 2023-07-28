@@ -17,6 +17,7 @@
  */
 package com.wire.android.ui.markdown
 
+import android.util.Log
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,14 +47,18 @@ fun MarkdownText(
     onTextLayout: (TextLayoutResult) -> Unit = {},
     style: TextStyle = LocalTextStyle.current,
     clickable: Boolean = true,
+    onClick: ((Int) -> Unit)? = null,
     onClickLink: ((linkText: String) -> Unit)? = null,
     onLongClick: (() -> Unit)?,
-    onOpenProfile: (String) -> Unit
+    onOpenProfile: (String) -> Unit,
+    id: String = "test"
 ) {
+    Log.d("TEST", "recompostion markdown text form message with id $id")
     val uriHandler = LocalUriHandler.current
 
     if (clickable) {
         ClickableText(
+            id = id,
             text = annotatedString,
             modifier = modifier,
             color = color,
@@ -64,22 +69,23 @@ fun MarkdownText(
             onTextLayout = onTextLayout,
             style = style,
             onClick = { offset ->
-                annotatedString.getStringAnnotations(
-                    tag = TAG_URL,
-                    start = offset,
-                    end = offset,
-                ).firstOrNull()?.let { result ->
-                    uriHandler.openUri(result.item)
-                    onClickLink?.invoke(annotatedString.substring(result.start, result.end))
-                }
-
-                annotatedString.getStringAnnotations(
-                    tag = TAG_MENTION,
-                    start = offset,
-                    end = offset
-                ).firstOrNull()?.let { result ->
-                    onOpenProfile(result.item)
-                }
+                onClick?.let { it(offset) }
+//                annotatedString.getStringAnnotations(
+//                    tag = TAG_URL,
+//                    start = offset,
+//                    end = offset,
+//                ).firstOrNull()?.let { result ->
+//                    uriHandler.openUri(result.item)
+//                    onClickLink?.invoke(annotatedString.substring(result.start, result.end))
+//                }
+//
+//                annotatedString.getStringAnnotations(
+//                    tag = TAG_MENTION,
+//                    start = offset,
+//                    end = offset
+//                ).firstOrNull()?.let { result ->
+//                    onOpenProfile(result.item)
+//                }
             },
             onLongClick = onLongClick
         )

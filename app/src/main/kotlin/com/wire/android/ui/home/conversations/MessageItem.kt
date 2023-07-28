@@ -20,6 +20,7 @@
 
 package com.wire.android.ui.home.conversations
 
+import android.util.Log
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -38,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -89,11 +91,12 @@ import com.wire.kalium.logic.data.user.UserId
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MessageItem(
+    index: Int = 0,
     message: UIMessage.Regular,
     conversationDetailsData: ConversationDetailsData,
     showAuthor: Boolean = true,
     audioMessagesState: Map<String, AudioState>,
-    onLongClicked: (UIMessage.Regular) -> Unit,
+    onLongClicked: () -> Unit,
     onAssetMessageClicked: (String) -> Unit,
     onAudioClick: (String) -> Unit,
     onChangeAudioPosition: (String, Int) -> Unit,
@@ -146,7 +149,7 @@ fun MessageItem(
                     .combinedClickable(
                         enabled = message.isAvailable,
                         onClick = { }, // TODO: implement some action onClick
-                        onLongClick = remember(message) { { onLongClicked(message) } }
+                        onLongClick = { onLongClicked() }
                     )
                     .padding(
                         end = dimensions().spacing12x,
@@ -158,7 +161,7 @@ fun MessageItem(
 
                 val isProfileRedirectEnabled =
                     header.userId != null &&
-                        !(header.isSenderDeleted || header.isSenderUnavailable)
+                            !(header.isSenderDeleted || header.isSenderUnavailable)
 
                 if (showAuthor) {
                     val avatarClickable = remember {
@@ -197,7 +200,7 @@ fun MessageItem(
                                 Clickable(enabled = isAvailable, onClick = {
                                     onAssetMessageClicked(header.messageId)
                                 }, onLongClick = {
-                                    onLongClicked(message)
+                                    onLongClicked()
                                 })
                             }
 
@@ -208,16 +211,10 @@ fun MessageItem(
                                         source == MessageSource.Self
                                     )
                                 }, onLongClick = {
-                                    onLongClicked(message)
+                                    onLongClicked()
                                 })
                             }
-                            val onLongClick: (() -> Unit)? = remember(message) {
-                                if (isAvailable) {
-                                    { onLongClicked(message) }
-                                } else {
-                                    null
-                                }
-                            }
+
                             Row {
                                 Box(modifier = Modifier.weight(1F)) {
                                     MessageContent(
@@ -228,7 +225,11 @@ fun MessageItem(
                                         onChangeAudioPosition = onChangeAudioPosition,
                                         onAssetClick = currentOnAssetClicked,
                                         onImageClick = currentOnImageClick,
-                                        onLongClick = onLongClick,
+                                        onLongClick = {
+                                            if (isAvailable) {
+                                                onLongClicked()
+                                            }
+                                        },
                                         onOpenProfile = onOpenProfile
                                     )
                                 }
@@ -271,7 +272,6 @@ fun MessageItem(
 
 @Composable
 fun EphemeralMessageExpiredLabel(isSelfMessage: Boolean, conversationDetailsData: ConversationDetailsData) {
-
     val stringResource = if (!isSelfMessage) {
         stringResource(id = R.string.label_information_waiting_for_deleation_when_self_not_sender)
     } else if (conversationDetailsData is ConversationDetailsData.OneOne) {
@@ -364,7 +364,7 @@ private fun MessageAuthorRow(messageHeader: MessageHeader) {
                 modifier = Modifier.weight(weight = 1f, fill = true),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Username(username.asString(), modifier = Modifier.weight(weight = 1f, fill = false))
+                Username(messageId, modifier = Modifier.weight(weight = 1f, fill = false))
                 UserBadge(
                     membership = membership,
                     connectionState = connectionState,
@@ -472,9 +472,13 @@ private fun MessageContent(
                     VerticalSpace.x4()
                 }
                 MessageBody(
+                    id = message.header.messageId,
                     messageBody = messageContent.messageBody,
                     isAvailable = !message.isPending && message.isAvailable,
-                    onLongClick = onLongClick,
+                    onLongClick = {
+                        Log.d("TEST", "on long clicked from message body ${message.header.messageId}")
+                        onLongClick?.let { it() }
+                    },
                     onOpenProfile = onOpenProfile
                 )
                 PartialDeliveryInformation(messageContent.deliveryStatus)

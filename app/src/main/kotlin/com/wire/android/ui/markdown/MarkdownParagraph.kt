@@ -17,6 +17,7 @@
  */
 package com.wire.android.ui.markdown
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -29,20 +30,30 @@ import org.commonmark.node.Document
 import org.commonmark.node.Paragraph
 
 @Composable
-fun MarkdownParagraph(paragraph: Paragraph, nodeData: NodeData, onMentionsUpdate: (List<DisplayMention>) -> Unit) {
-        val padding = if (paragraph.parent is Document) dimensions().spacing8x else dimensions().spacing0x
-        Box(modifier = Modifier.padding(bottom = padding)) {
-            val annotatedString = buildAnnotatedString {
-                pushStyle(MaterialTheme.wireTypography.body01.toSpanStyle())
-                val updatedMentions = inlineChildren(paragraph, this, nodeData)
-                onMentionsUpdate(updatedMentions)
-                pop()
-            }
-            MarkdownText(
-                annotatedString,
-                style = nodeData.style,
-                onLongClick = nodeData.onLongClick,
-                onOpenProfile = nodeData.onOpenProfile
-            )
+fun MarkdownParagraph(
+    paragraph: Paragraph,
+    nodeData: NodeData,
+    id: String = "test",
+    onMentionsUpdate: (List<DisplayMention>) -> Unit
+) {
+    val padding = if (paragraph.parent is Document) dimensions().spacing8x else dimensions().spacing0x
+
+    Box(modifier = Modifier.padding(bottom = padding)) {
+        val annotatedString = buildAnnotatedString {
+            pushStyle(MaterialTheme.wireTypography.body01.toSpanStyle())
+            val updatedMentions = inlineChildren(paragraph, this, nodeData)
+            onMentionsUpdate(updatedMentions)
+            pop()
         }
+        MarkdownText(
+            id = id,
+            annotatedString = annotatedString,
+            style = nodeData.style,
+            onLongClick = {
+                Log.d("TEST", "on longclicked from markdwon paragraph $id")
+                nodeData.onLongClick?.let { it() }
+            },
+            onOpenProfile = nodeData.onOpenProfile
+        )
+    }
 }

@@ -86,7 +86,8 @@ fun MarkdownTable(tableBlock: TableBlock, nodeData: NodeData, onMentionsUpdate: 
                             .weight(1f)
                             .padding(dimensions().spacing8x),
                         onLongClick = nodeData.onLongClick,
-                        onOpenProfile = nodeData.onOpenProfile
+                        onOpenProfile = nodeData.onOpenProfile,
+                        id = "test"
                     )
                 }
             }

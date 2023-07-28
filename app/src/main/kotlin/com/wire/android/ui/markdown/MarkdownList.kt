@@ -41,10 +41,12 @@ fun MarkdownBulletList(bulletList: BulletList, nodeData: NodeData) {
             inlineChildren(it, this, nodeData)
             pop()
         }
-        MarkdownText(annotatedString = text,
+        MarkdownText(
+            annotatedString = text,
             style = MaterialTheme.wireTypography.body01,
             onLongClick = nodeData.onLongClick,
-            onOpenProfile = nodeData.onOpenProfile
+            onOpenProfile = nodeData.onOpenProfile,
+            id = "test"
         )
     }
 }
@@ -64,7 +66,8 @@ fun MarkdownOrderedList(orderedList: OrderedList, nodeData: NodeData) {
             annotatedString = text,
             style = MaterialTheme.wireTypography.body01,
             onLongClick = nodeData.onLongClick,
-            onOpenProfile = nodeData.onOpenProfile
+            onOpenProfile = nodeData.onOpenProfile,
+            id = "test"
         )
     }
 }

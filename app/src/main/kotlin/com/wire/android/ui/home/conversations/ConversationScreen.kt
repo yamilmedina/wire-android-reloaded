@@ -21,6 +21,7 @@
 package com.wire.android.ui.home.conversations
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -606,6 +607,7 @@ fun MessageList(
         itemsIndexed(lazyPagingMessages, key = { _, uiMessage ->
             uiMessage.header.messageId
         }) { index, message ->
+         //   Log.d("TEST", "index message $index messageId : ${message?.header?.messageId}")
             if (message == null) {
                 // We can draw a placeholder here, as we fetch the next page of messages
                 return@itemsIndexed
@@ -619,7 +621,9 @@ fun MessageList(
                         audioMessagesState = audioMessagesState,
                         onAudioClick = onAudioItemClicked,
                         onChangeAudioPosition = onChangeAudioPosition,
-                        onLongClicked = onShowEditingOption,
+                        onLongClicked = {
+                            Log.d("TEST", "onLongClicked ${message.header.messageId}")
+                        },
                         onAssetMessageClicked = onAssetItemClicked,
                         onImageMessageClicked = onImageFullScreenMode,
                         onOpenProfile = onOpenProfile,
