@@ -43,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.wire.android.R
+import com.wire.android.appLogger
 import com.wire.android.model.Clickable
 import com.wire.android.navigation.hiltSavedStateViewModel
 import com.wire.android.ui.common.Icon
@@ -103,9 +104,12 @@ private fun mapToUISections(viewModel: MyAccountViewModel, state: MyAccountState
             } else {
                 null
             },
-            if (email.isNotBlank()) Email(
-                email,
-                clickableActionIfPossible(!state.isEditEmailAllowed) { viewModel.navigateToChangeEmail() }) else null,
+            if (email.isNotBlank()) {
+                appLogger.d("Email: $email")
+                Email(
+                    email,
+                    clickableActionIfPossible(!state.isEditEmailAllowed) { viewModel.navigateToChangeEmail() })
+            } else null,
             if (!teamName.isNullOrBlank()) Team(teamName) else null,
             if (domain.isNotBlank()) Domain(domain) else null
         )
