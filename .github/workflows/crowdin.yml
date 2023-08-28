@@ -38,8 +38,8 @@ jobs:
                     commit_message: "chore: update localization strings via Crowdin"
                     pull_request_title: "chore: update localization strings via Crowdin"
                     pull_request_body: "This PR pulls in the latest localization translations from Crowdin."
-                    github_user_name: "zebot"
-                    github_user_email: "zebot@users.noreply.github.com"
+                    github_user_name: "yamilmedina"
+                    github_user_email: "yamilmedina@users.noreply.github.com"
 
                     pull_request_labels: "l10n, crowdin"
                     pull_request_assignees: "crowdin-bot"
@@ -47,6 +47,7 @@ jobs:
 
                     source: "app/src/main/res/values/strings.xml"
                     translation: "app/src/main/res/values-%two_letters_code%/%original_file_name%"
+                    base_path: "/develop"
 
                 env:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
